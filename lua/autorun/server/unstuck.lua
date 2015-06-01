@@ -1,42 +1,30 @@
-local ply = nil
-
--- WeHateGarbage
 local t = {start=nil,endpos=nil,mask=MASK_PLAYERSOLID,filter=nil}
-local function PlayerNotStuck()
+local function PlayerNotStuck(ply, pos)
 
-	t.start = ply:GetPos()
+	t.start = pos or ply:GetPos()
 	t.endpos = t.start
 	t.filter = ply
+	return util.TraceEntity(t, ply).StartSolid == false
 	
-	return util.TraceEntity(t,ply).StartSolid == false
 	
 end
 
-local NewPos = nil
-local function FindPassableSpace( direction, step )
-
+local function FindPassableSpace(ply, direction, step )
+	local OldPos = ply:GetPos()
 	local i = 0
-	while ( i < 100 ) do
-		local origin = ply:GetPos()
-
-		--origin = VectorMA( origin, step, direction )
+	local origin = ply:GetPos()
+	while ( i < 20 ) do
 		origin = origin + step * direction
-		
-		ply:SetPos( origin )
-		if ( PlayerNotStuck( ply ) ) then
-			NewPos = ply:GetPos()
-			return true
+		if ( PlayerNotStuck(ply, origin) ) then
+			return true, origin
 		end
 		i = i + 1
 	end
-	return false
+	--ply:SetPos(OldPos)
+	return false, OldPos
 end
 
-/* 	
-	Purpose: Unstucks player ,
-	Note: Very expensive to call, you have been warned!
-*/
-local function UnstuckPlayer( pl )
+local function UnstuckPlayer(pl, ang)
 	ply = pl
 
 	NewPos = ply:GetPos()
@@ -44,33 +32,27 @@ local function UnstuckPlayer( pl )
 	
 	if ( !PlayerNotStuck( ply ) ) then
 	
-		local angle = ply:GetAngles()
+		local angle = ang or ply:GetAngles()
 		
 		local forward = angle:Forward()
 		local right = angle:Right()
 		local up = angle:Up()
 		
-		local SearchScale = 1 -- Increase and it will unstuck you from even harder places but with lost accuracy. Please, don't try higher values than 12
-		if ( !FindPassableSpace(  up, SearchScale ) )	// up
-		then
-			if ( !FindPassableSpace(  forward, SearchScale ) )
-			then
-				if ( !FindPassableSpace(  right, SearchScale ) )
-				then
-					if ( !FindPassableSpace(  right, -SearchScale ) )		// left
-					then
-						if ( !FindPassableSpace(  forward, -SearchScale ) )	// back
-						then
-							if ( !FindPassableSpace(  up, -SearchScale ) )	// down
-							then
-							
-							
-								-- spam spam spam
-								
-								--Msg( "Can't find the world for player "..tostring(ply).."\n" )
-								
-								return false
-									
+		local SearchScale = 1
+		local found
+		found, NewPos = FindPassableSpace(pl, forward, -SearchScale )
+		if ( not found ) then
+			found, NewPos = FindPassableSpace(pl, right, SearchScale )
+			if ( not found ) then
+				found, NewPos = FindPassableSpace(pl, right, -SearchScale )
+				if ( not found ) then
+					found, NewPos = FindPassableSpace(pl, up, -SearchScale )
+					if ( not found ) then
+						found, NewPos = FindPassableSpace(pl, up, SearchScale )
+						if ( not found ) then
+							found, NewPos = FindPassableSpace(pl, forward, SearchScale )
+							if ( not found ) then
+								return false	
 							end
 						end
 					end
@@ -78,9 +60,8 @@ local function UnstuckPlayer( pl )
 			end
 		end
 		
-		if OldPos == NewPos then 
-			print("Unstuck: Shouldnothappen")
-			return true -- Not stuck?
+		if OldPos == NewPos then
+			return true -- ???
 		else
 			ply:SetPos( NewPos )
 			if SERVER and ply and ply:IsValid() and ply:GetPhysicsObject():IsValid() then
@@ -93,12 +74,7 @@ local function UnstuckPlayer( pl )
 		end
 		
 	end
-	
-	
 end
-
-
-
 
 ---------------------	
 -- Helper functions
@@ -110,14 +86,7 @@ if meta.UnStuck then
 else
 
 
-	/*	Unstucks a player
-
-	returns:
-		true:	Unstucked
-		false:	Could not UnStuck
-		else:	Not stuck 
-	*/
-	function meta:UnStuck()
-		return UnstuckPlayer(self)
+	function meta:UnStuck(...)
+		return UnstuckPlayer(self, ...)
 	end
 end
