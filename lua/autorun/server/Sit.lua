@@ -443,7 +443,7 @@ hook.Add("PlayerLeaveVehicle","Remove_Seat",function(ply,self)
 		end
 		
 		if(not ShouldAlwaysSit(ply)) then
-			if(not self.parent or not IsValid(self.parent) or self.parent.OnWorld) then
+			if(ply:GetPos():Distance(self.oldpos) < 100 or not self.parent or not IsValid(self.parent) or self.parent.OnWorld) then
 				ply:SetPos(self.oldpos)
 				ply:SetEyeAngles(self.oldang)
 				if ply.UnStuck then
