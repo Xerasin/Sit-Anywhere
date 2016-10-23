@@ -418,16 +418,6 @@ concommand.Add("sit",function(ply, cmd, args)
 	sitcmd(ply)
 end)
 
-hook.Add("KeyPress","seats_use",function(ply,key)
-	if key ~= IN_USE then return end
-	
-	local walk=ply:KeyDown(IN_WALK) or ShouldAlwaysSit(ply)
-	if not walk then return end
-	
-	sitcmd(ply)
-	
-end)
-
 
 hook.Add("PlayerLeaveVehicle","Remove_Seat",function(ply,self)
 	if(self.removeonexit and self:GetClass()=="prop_vehicle_prisoner_pod") then
