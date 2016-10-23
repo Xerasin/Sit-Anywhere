@@ -1,5 +1,5 @@
 --Oh my god I can sit anywhere! by Xerasin--
-local NextUse = setmetatable({},{__mode='k'})
+local NextUse = setmetatable({},{__mode='k', __index=function() return 0 end})
 
 local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_NOTIFY})
 --[[
@@ -34,8 +34,8 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle:SetPos(pos)
 	
 	vehicle.playerdynseat=true
-	vehicle.oldpos = ply:GetPos()
-	vehicle.oldang = ply:EyeAngles()
+	vehicle.oldpos = vehicle:WorldToLocal(ply:GetPos())
+	vehicle.oldang = vehicle:WorldToLocalAngles(ply:EyeAngles())
 	
 	vehicle:SetModel("models/nova/airboat_seat.mdl") -- DO NOT CHANGE OR CRASHES WILL HAPPEN
 	
@@ -398,77 +398,61 @@ local function sitcmd(ply)
 	end
 	local now=CurTime()
 	
-	local nextuse = NextUse[ply] or now
-	
-	if nextuse>now then
-		return
-	end
+	if NextUse[ply]>now then return end
 	
 	-- do want to prevent player getting off right after getting in but how :C
 	if ply:Sit() then
-		nextuse=now + 1
+		NextUse[ply] = now + 1
+	else
+		NextUse[ply] = now + 0.1
 	end
-	
-	NextUse[ply] = nextuse + 0.1
-	
 end
-
-
-hook.Add("CanExitVehicle","noinstaleave",function(veh,ply) 
-	
-	if not veh.playerdynseat then return end
-	
-	local now=CurTime()
-	
-	local nextuse = NextUse[ply] or now
-	
-	if nextuse > now then
-		return false
-	end
-end)
 
 concommand.Add("sit",function(ply, cmd, args)
 	sitcmd(ply)
 end)
 
-
-hook.Add("PlayerLeaveVehicle","Remove_Seat",function(ply,self)
-	if(self.removeonexit and self:GetClass()=="prop_vehicle_prisoner_pod") then
+hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
+	if not self.playerdynseat then return end
+	if CurTime()<NextUse[ply] then return false end
+	NextUse[ply] = CurTime() + 1
+		
+	local function OnExit()
 		local prev = ply.sitting_allowswep
 		if prev~=nil then
 			ply.sitting_allowswep = nil
 			ply:SetAllowWeaponsInVehicle(prev)
 		end
-		
-		NextUse[ply] = CurTime() + 1
 		if(self.exit) then
 			self.exit(ply)
 		end
-		
-		if(not ShouldAlwaysSit(ply)) then
-			if(ply:GetPos():Distance(self.oldpos) < 100 or not self.parent or not IsValid(self.parent) or self.parent.OnWorld) then
-				ply:SetPos(self.oldpos)
-				ply:SetEyeAngles(self.oldang)
-				if ply.UnStuck then
-					timer.Simple(0,function() 
-						ply:UnStuck()
-					end)
-				end
-			else
-				if(ply.UnStuck) then
-					local pos,ang = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
-					ply:SetPos(pos)
-					ply:UnStuck()
-					--print("unstuck",ply)
-					timer.Simple(0,function() 
-						ply:UnStuck()
-					end)
-				else
-					ply:SetPos(self:GetPos()+Vector(0,0,36))
-				end
-			end
-		end
 		self:Remove()
+	end
+	
+	if ShouldAlwaysSit(ply) then
+		-- Movie gamemode
+		if ply.UnStuck then
+			local pos,ang = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
+			ply:UnStuck(pos, pos, OnExit)
+			return false
+		else
+			timer.Simple(0, function()
+				ply:SetPos(self:GetPos()+Vector(0,0,36))
+				OnExit()
+			end)
+		end
+	else
+		local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
+		if ply.UnStuck then
+			ply:UnStuck(oldpos, OnExit)
+			return false
+		else
+			timer.Simple(0, function()
+				ply:SetPos(oldpos)
+				ply:SetEyeAngles(oldang)
+				OnExit()
+			end)
+		end
 	end
 end)
 
