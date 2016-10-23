@@ -43,6 +43,9 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle:SetKeyValue("limitview","0")
 	vehicle:Spawn()
 	vehicle:Activate()
+	if CPPI then
+		vehicle:CPPISetOwner(Entity(0))
+	end
 	
 	-- Let's try not to crash
 	vehicle:SetMoveType(MOVETYPE_PUSH)
