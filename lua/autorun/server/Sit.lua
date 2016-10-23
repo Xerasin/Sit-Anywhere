@@ -206,14 +206,16 @@ local model_blacklist = {  -- I need help finding out why these crash
 }
 
 function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
+	
 	if EyeTrace == nil then
 		EyeTrace = ply:GetEyeTrace()
-	end
-	if type(EyeTrace)=="Vector" then
+	elseif type(EyeTrace)=="Vector" then
 		return Sit(ply, EyeTrace, ang or Angle(0,0,0), parent, parentbone or 0, func, exit)
 	end
+	
 	if not EyeTrace.Hit then return end
 	if EyeTrace.HitPos:Distance(EyeTrace.StartPos) > 100 then return end
+	
 	local sitting_disallow_on_me = ply:GetInfoNum("sitting_disallow_on_me",0)==1
 	if SittingOnPlayer:GetBool() then
 		for k,v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do 
@@ -282,6 +284,14 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			end
 		end
 	end
+	
+	local EyeTrace2Tr = util.GetPlayerTrace(ply)
+	EyeTrace2Tr.filter = ply
+	EyeTrace2Tr.mins = Vector(-5,-5,-5)
+	EyeTrace2Tr.maxs = Vector(5,5,5)
+	local EyeTrace2 = util.TraceHull(EyeTrace2Tr)
+	if EyeTrace2.Entity ~= EyeTrace.Entity then return end
+	
 	local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
 	if(math.abs(ang.pitch) <= 15) then
 		local ang = Angle()
