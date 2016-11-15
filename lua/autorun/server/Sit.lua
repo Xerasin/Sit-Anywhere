@@ -1,3 +1,4 @@
+AddCSLuaFile("lua/autorun/client/sit.lua")
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({},{__mode='k', __index=function() return 0 end})
 
@@ -32,13 +33,13 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle:SetAngles(ang)
 	pos = pos + vehicle:GetUp()*18
 	vehicle:SetPos(pos)
-	
+
 	vehicle.playerdynseat=true
 	vehicle.oldpos = vehicle:WorldToLocal(ply:GetPos())
 	vehicle.oldang = vehicle:WorldToLocalAngles(ply:EyeAngles())
-	
+
 	vehicle:SetModel("models/nova/airboat_seat.mdl") -- DO NOT CHANGE OR CRASHES WILL HAPPEN
-	
+
 	vehicle:SetKeyValue("vehiclescript", "scripts/vehicles/prisoner_pod.txt")
 	vehicle:SetKeyValue("limitview","0")
 	vehicle:Spawn()
@@ -46,62 +47,62 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	if CPPI then
 		vehicle:CPPISetOwner(Entity(0))
 	end
-	
+
 	-- Let's try not to crash
 	vehicle:SetMoveType(MOVETYPE_PUSH)
-	vehicle:GetPhysicsObject():Sleep()	
+	vehicle:GetPhysicsObject():Sleep()
 	vehicle:SetCollisionGroup(COLLISION_GROUP_NONE)
-	
+
 	vehicle:SetNotSolid(true)
-	vehicle:GetPhysicsObject():Sleep()	
+	vehicle:GetPhysicsObject():Sleep()
 	vehicle:GetPhysicsObject():EnableGravity(false)
 	vehicle:GetPhysicsObject():EnableMotion(false)
 	vehicle:GetPhysicsObject():EnableCollisions(false)
 	vehicle:GetPhysicsObject():SetMass(1)
-	
+
 	-- Visibles
 	vehicle:DrawShadow(false)
 	vehicle:SetColor(Color(0,0,0,0))
 	vehicle:SetRenderMode(RENDERMODE_TRANSALPHA)
 	vehicle:SetNoDraw(true)
-	
+
 	vehicle.VehicleName = "Airboat Seat"
 	vehicle.ClassOverride = "prop_vehicle_prisoner_pod"
-	
+
 	if parent and parent:IsValid() then
 		local r = math.rad(ang.yaw+90)
 		vehicle.plyposhack = vehicle:WorldToLocal(pos + Vector(math.cos(r)*2,math.sin(r)*2,2))
-		
+
 		vehicle:SetParent(parent)
 		vehicle.parent=parent
-		
+
 	else
 		vehicle.OnWorld = true
 	end
-	
+
 	local prev = ply:GetAllowWeaponsInVehicle()
-	if prev then 
+	if prev then
 		ply.sitting_allowswep = nil
 	elseif AllowWeaponsInSeat:GetBool() then
 		ply.sitting_allowswep = prev
 		ply:SetAllowWeaponsInVehicle(true)
 	end
-	
+
 	ply:EnterVehicle(vehicle)
-	
+
 	if PlayerDamageOnSeats:GetBool() then
 		ply:SetCollisionGroup(COLLISION_GROUP_WEAPON)
 	end
-	
+
 	vehicle.removeonexit = true
 	vehicle.exit = exit
-	
+
 	local ang = vehicle:GetAngles()
 	ply:SetEyeAngles(Angle(0,90,0))
-	if func then 
-		func(ply) 
-	end 
-	
+	if func then
+		func(ply)
+	end
+
 	return vehicle
 end
 
@@ -118,14 +119,14 @@ local SittingOnPlayerPoses =
 	{
 		Pos = Vector(33,13,7),
 		Ang = Angle(0,270,90),
-		Func = function(ply) 
+		Func = function(ply)
 			if(not ply:LookupBone("ValveBiped.Bip01_R_Thigh")) then return end
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,90,0)) 
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,90,0)) 
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,90,0))
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,90,0))
 		end,
 		OnExitFunc = function(ply)
 			if(not ply:LookupBone("ValveBiped.Bip01_R_Thigh")) then return end
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,0,0)) 
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,0,0))
 			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,0,0))
 		end,
 		FindAng = 270,
@@ -133,24 +134,24 @@ local SittingOnPlayerPoses =
 	{
 		Pos = Vector(0, 16, -15),
 		Ang = Angle(0, 180, 0),
-		Func = function(ply) 
+		Func = function(ply)
 			if(not ply:LookupBone("ValveBiped.Bip01_R_Thigh")) then return end
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(45,0,0)) 
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(-45,0,0)) 
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(45,0,0))
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(-45,0,0))
 		end,
 		OnExitFunc = function(ply)
 			if(not ply:LookupBone("ValveBiped.Bip01_R_Thigh")) then return end
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,0,0)) 
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,0,0))
 			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,0,0))
 		end,
-		FindAng = 0,		
+		FindAng = 0,
 	},
 	{
 		Pos = Vector(0, 8, -18),
 		Ang = Angle(0, 0, 0),
 		FindAng = 180,
 	},
-	
+
 }
 
 local lookup={}
@@ -168,7 +169,7 @@ local function FindPose(this,me)
 		evec.z=0
 		evec:Normalize()
 	local derp=avec:Dot(evec)
-	
+
 	local avec=me:GetAimVector()
 		avec.z=0
 		avec:Normalize()
@@ -178,13 +179,13 @@ local function FindPose(this,me)
 	local herp=avec:Dot(evec)
 	local v=Vector(derp,herp,0)
 	local a=v:Angle()
-	
+
 	local ang=a.y
 	assert(ang>=0)
 	assert(ang<=360)
 	ang=ang+90+180
 	ang=ang%360
-	
+
 	table.sort(lookup,function(aa,bb)
 		return 	d(ang,aa[1])<d(ang,bb[1])
 	end)
@@ -194,7 +195,7 @@ end
 
 local blacklist = { ["gmod_wire_keyboard"] = true }
 local model_blacklist = {  -- I need help finding out why these crash
-	--[[["models/props_junk/sawblade001a.mdl"] = true, 
+	--[[["models/props_junk/sawblade001a.mdl"] = true,
 	["models/props_c17/furnitureshelf001b.mdl"] = true,
 	["models/props_phx/construct/metal_plate1.mdl"] = true,
 	["models/props_phx/construct/metal_plate1x2.mdl"] = true,
@@ -209,19 +210,19 @@ local model_blacklist = {  -- I need help finding out why these crash
 }
 
 function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
-	
+
 	if EyeTrace == nil then
 		EyeTrace = ply:GetEyeTrace()
 	elseif type(EyeTrace)=="Vector" then
 		return Sit(ply, EyeTrace, ang or Angle(0,0,0), parent, parentbone or 0, func, exit)
 	end
-	
+
 	if not EyeTrace.Hit then return end
 	if EyeTrace.HitPos:Distance(EyeTrace.StartPos) > 100 then return end
-	
+
 	local sitting_disallow_on_me = ply:GetInfoNum("sitting_disallow_on_me",0)==1
 	if SittingOnPlayer:GetBool() then
-		for k,v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do 
+		for k,v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do
 			local safe=256
 			while IsValid(v.SittingOnMe) and safe>0 do
 				safe=safe - 1
@@ -232,17 +233,17 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			and v:GetDriver()
 			and v:GetDriver():IsValid()
 			and not v.PlayerSitOnPlayer
-			) then	
+			) then
 				if v:GetDriver():GetInfoNum("sitting_disallow_on_me",0)~=0 then
 					ply:ChatPrint(v:GetDriver():Name()..' has disabled sitting!')
 					return
 				end
-				
+
 				if sitting_disallow_on_me then
 					ply:ChatPrint("You've disabled sitting on players!")
 					return
 				end
-			
+
 				local pose = FindPose(v,ply) -- SittingOnPlayerPoses[math.random(1, #SittingOnPlayerPoses)]
 				local pos = v:GetDriver():GetPos()
 				if(v.plyposhack) then
@@ -257,13 +258,13 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			end
 		end
 	else
-		for k,v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do 
+		for k,v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do
 			if(v.removeonexit) then
 				return
 			end
 		end
 	end
-	
+
 	if(not EyeTrace.HitWorld and SitOnEntsMode:GetInt() == 0) then return end
 	if(not EyeTrace.HitWorld and blacklist[string.lower(EyeTrace.Entity:GetClass())]) then return end
 	if(not EyeTrace.HitWorld and EyeTrace.Entity:GetModel() and model_blacklist[string.lower(EyeTrace.Entity:GetModel())]) then return end
@@ -287,14 +288,14 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			end
 		end
 	end
-	
+
 	local EyeTrace2Tr = util.GetPlayerTrace(ply)
 	EyeTrace2Tr.filter = ply
 	EyeTrace2Tr.mins = Vector(-5,-5,-5)
 	EyeTrace2Tr.maxs = Vector(5,5,5)
 	local EyeTrace2 = util.TraceHull(EyeTrace2Tr)
 	if EyeTrace2.Entity ~= EyeTrace.Entity then return end
-	
+
 	local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
 	if(math.abs(ang.pitch) <= 15) then
 		local ang = Angle()
@@ -303,7 +304,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 		local distsang = {}
 		local ang_smallest_hori = nil
 		local smallest_hori = 90000
-		for I=0,360,15 do 
+		for I=0,360,15 do
 			local rad = math.rad(I)
 			local dir = Vector(math.cos(rad), math.sin(rad), 0)
 			local trace = util.QuickTrace(EyeTrace.HitPos + dir*20 + Vector(0,0,5), Vector(0,0,-15000), filter)
@@ -311,10 +312,10 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			trace.Distance  =  trace.StartPos:Distance(trace.HitPos)
 			trace.Distance2 = trace.HorizontalTrace.StartPos:Distance(trace.HorizontalTrace.HitPos)
 			trace.ang = I
-			
+
 			if((not trace.Hit or trace.Distance > 14) and (not trace.HorizontalTrace.Hit or trace.Distance2 > 20)) then
 				table.insert(dists,trace)
-				
+
 			end
 			if(trace.Distance2 < smallest_hori and (not trace.HorizontalTrace.Hit or trace.Distance2 > 3)) then
 				smallest_hori = trace.Distance2
@@ -323,7 +324,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			distsang[I] = trace
 		end
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
-		
+
 		if(ang_smallest_hori and distsang[infront].Hit and distsang[infront].Distance > 14 and smallest_hori <= 16) then
 			local hori = distsang[ang_smallest_hori].HorizontalTrace
 			ang.yaw = (hori.HitNormal:Angle().yaw - 90)
@@ -347,7 +348,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			table.sort(dists, function(a,b) return b.Distance < a.Distance end)
 			local wants = {}
 			local eyeang = ply:EyeAngles() + Angle(0,180,0)
-			for I=1,#dists do 
+			for I=1,#dists do
 				local trace = dists[I]
 				local behind = distsang[(trace.ang + 180) % 360]
 				if behind.Distance2 > 3 then
@@ -382,10 +383,10 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 				end
 			end
 			local vehicle = Sit(ply, EyeTrace.HitPos - Vector(0,0,20), ang, ent, EyeTrace.PhysicsBone or 0)
-			
+
 			return vehicle
 		end
-		
+
 	end
 
 end
@@ -397,9 +398,9 @@ local function sitcmd(ply)
 		if not ply:IsAdmin() then return end
 	end
 	local now=CurTime()
-	
+
 	if NextUse[ply]>now then return end
-	
+
 	-- do want to prevent player getting off right after getting in but how :C
 	if ply:Sit() then
 		NextUse[ply] = now + 1
@@ -416,7 +417,7 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if not self.playerdynseat then return end
 	if CurTime()<NextUse[ply] then return false end
 	NextUse[ply] = CurTime() + 1
-		
+
 	local function OnExit()
 		local prev = ply.sitting_allowswep
 		if prev~=nil then
@@ -428,7 +429,7 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 		end
 		self:Remove()
 	end
-	
+
 	if ShouldAlwaysSit(ply) then
 		-- Movie gamemode
 		if ply.UnStuck then
@@ -457,19 +458,19 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 end)
 
 
-hook.Add("AllowPlayerPickup","Nopickupwithalt",function(ply) 
-	if(ply:KeyDown(IN_WALK)) then 
-		return false 
-	end 
+hook.Add("AllowPlayerPickup","Nopickupwithalt",function(ply)
+	if(ply:KeyDown(IN_WALK)) then
+		return false
+	end
 end)
 
-hook.Add("PlayerDeath","SitSeat",function(pl) 
+hook.Add("PlayerDeath","SitSeat",function(pl)
 	for k,v in next, player.GetAll() do
 		local veh = v:GetVehicle()
 		if veh:IsValid() and veh.playerdynseat and veh:GetParent()==pl then
 			veh:Remove()
 		end
-	end 
+	end
 end)
 
 hook.Add("PlayerEnteredVehicle","unsits",function(pl,veh)
@@ -478,17 +479,17 @@ hook.Add("PlayerEnteredVehicle","unsits",function(pl,veh)
 			v:ExitVehicle()
 		end
 	end
-	
+
 	DropEntityIfHeld( veh )
-	
+
 	if veh:GetParent():IsValid() then
-		DropEntityIfHeld( veh:GetParent() )	
+		DropEntityIfHeld( veh:GetParent() )
 	end
-	
+
 end)
 
 hook.Add("EntityRemoved","Sitting_EntityRemoved",function(ent)
-	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do 
+	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do
 		if(v:GetParent() == ent) then
 			if IsValid(v:GetDriver()) then
 				v:GetDriver():ExitVehicle()
@@ -498,8 +499,8 @@ hook.Add("EntityRemoved","Sitting_EntityRemoved",function(ent)
 	end
 end)
 
-timer.Create("RemoveSeats",15,0,function() 
-	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do 
+timer.Create("RemoveSeats",15,0,function()
+	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do
 		if(v.removeonexit and (v:GetDriver() == nil or not v:GetDriver():IsValid() or v:GetDriver():GetVehicle() ~= v --[[???]])) then
 			v:Remove()
 		end
@@ -523,7 +524,7 @@ hook.Add("InitPostEntity", "SAW_CompatFix", function()
 						if veh:GetClass() == "prop_vehicle_prisoner_pod" && !(ply == veh.vehicle:GetDriver()) then PM_SendPassengers( veh.vehicle:GetDriver() ) end
 						return false
 				end
-			   
+
 				if ply:VisibleVec( veh:LocalToWorld(Vector(-80, 0, 5) )) then
 						ply:ExitVehicle()
 						ply:SetPos( veh:LocalToWorld(Vector(-75, 0, 5) ))

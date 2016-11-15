@@ -9,9 +9,10 @@ end
 local meta= FindMetaTable("Player" )
 function meta:UnStuck(pos, callback)
 	if self.unstucking then return end
+	if not pos then pos = self:GetPos() end
 	if PlayerNotStuck( self, pos ) then
 		self:ExitVehicle()
-		callback()
+		if callback then callback() end
 		timer.Simple(0, function()
 			if self:IsValid() then
 				self:SetPos(pos)
@@ -19,11 +20,11 @@ function meta:UnStuck(pos, callback)
 		end)
 	else
 		self.unstucking = true
-		
+
 		local origin = self:GetPos()
 		local phi = math.rad(self:GetAngles().yaw)
 		local cosphi, sinphi = math.cos(phi), math.sin(phi)
-		
+
 		--Spherical coordinates
 		local ranges = {
 			{38, 118, 20}, --rho
@@ -32,12 +33,12 @@ function meta:UnStuck(pos, callback)
 		}
 		local state = {ranges[1][1], ranges[2][1], ranges[3][1]}
 		local hookname = "Unstucking"..self:EntIndex()
-		
+
 		local function UnStuck(pos)
 			self.unstucking = nil
 			hook.Remove("Think", hookname)
 			self:ExitVehicle()
-			callback()
+			if callback then callback() end
 			if pos then
 				timer.Simple(0, function()
 					if self:IsValid() then
@@ -46,19 +47,19 @@ function meta:UnStuck(pos, callback)
 				end)
 			end
 		end
-		
+
 		hook.Add("Think", hookname, function()
 			if not self:IsValid() then hook.Remove("Think", hookname) return end
 			local i, k, j = state[1], state[2], state[3]
 			local sinj, cosj = math.sin(j), math.cos(j)
 			local sink, cosk = math.sin(k), math.cos(k)
-			
+
 			--Check 4 directions per frame
 			local v1 = Vector( i*sinj*cosk, i*sinj*sink, i*cosj )
 			local v2 = Vector( -v1.x, v1.y, v1.z )
 			local v3 = Vector( v1.x, v1.y, -v1.z )
 			local v4 = Vector( -v1.x, v1.y, -v1.z )
-			
+
 			--Rotate by phi
 			local function rotate(v)
 				local x, y = cosphi*v.x - sinphi*v.y, cosphi*v.y + sinphi*v.x
@@ -66,7 +67,7 @@ function meta:UnStuck(pos, callback)
 				v.y = y
 			end
 			rotate(v1) rotate(v2) rotate(v3) rotate(v4)
-			
+
 			--Check if open
 			if PlayerNotStuck( self, origin + v1 ) then
 				UnStuck( origin + v1 )
