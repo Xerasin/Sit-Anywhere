@@ -44,10 +44,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle:SetKeyValue("limitview","0")
 	vehicle:Spawn()
 	vehicle:Activate()
-	if CPPI then
-		vehicle:CPPISetOwner(Entity(0))
-	end
-
+	
 	-- Let's try not to crash
 	vehicle:SetMoveType(MOVETYPE_PUSH)
 	vehicle:GetPhysicsObject():Sleep()
@@ -428,6 +425,7 @@ end
 hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if not self.playerdynseat then return end
 	if CurTime()<NextUse[ply] then return false end
+
 	NextUse[ply] = CurTime() + 1
 
 	local OnExit = function() UndoSitting(self, ply) end
@@ -438,7 +436,6 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 			local pos,ang = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
 		
 			ply:UnStuck(pos, pos, OnExit)
-			return false
 		else
 			timer.Simple(0, function()
 				ply:SetPos(self:GetPos()+Vector(0,0,36))
@@ -449,7 +446,6 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 		local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
 		if ply.UnStuck then
 			ply:UnStuck(oldpos, OnExit)
-			return false
 		else
 			timer.Simple(0, function()
 				ply:SetPos(oldpos)
