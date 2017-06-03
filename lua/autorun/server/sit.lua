@@ -19,14 +19,8 @@ local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
 
 local function ShouldAlwaysSit(ply)
-	if not ms then return end
-	if not ms.GetTheaterPlayers then return end
-	if not ms.GetTheaterPlayers() then return end
-	return ms.GetTheaterPlayers()[ply]
+	return hook.Run("ShouldAlwaysSit",ply)
 end
-
-
-
 
 local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	ply:ExitVehicle()
