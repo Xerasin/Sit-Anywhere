@@ -1,4 +1,6 @@
-CreateClientConVar("sitting_disallow_on_me","0",true,true)
+AddCSLuaFile("lua/autorun/client/sit.lua")
+
+CreateClientConVar("sitting_disallow_on_me","1",true,true)
 
 local function ShouldAlwaysSit(ply)
 	if not ms then return end
