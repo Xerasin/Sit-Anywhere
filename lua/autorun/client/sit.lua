@@ -5,7 +5,7 @@ local function ShouldAlwaysSit(ply)
 end
 
 hook.Add("KeyPress","seats_use",function(ply,key)
-	if not IsFirstTimePredicted() then return end
+	if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
 	
 	if key ~= IN_USE then return end
 	
