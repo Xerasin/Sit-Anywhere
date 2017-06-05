@@ -429,8 +429,14 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 		-- Movie gamemode
 		if ply.UnStuck then
 			local pos,ang = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
-		
-			ply:UnStuck(pos, OnExit)
+			if ms then
+				ply:UnStuck()
+				ply:SetPos(pos)
+				OnExit()
+			else
+				ply:UnStuck(pos, OnExit)
+			end
+			
 		else
 			timer.Simple(0, function()
 				ply:SetPos(self:GetPos()+Vector(0,0,36))
@@ -440,7 +446,13 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	else
 		local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
 		if ply.UnStuck then
-			ply:UnStuck(oldpos, OnExit)
+			if ms then
+				ply:UnStuck()
+				ply:SetPos(oldpos)
+				OnExit()
+			else
+				ply:UnStuck(oldpos, OnExit)
+			end
 		else
 			timer.Simple(0, function()
 				ply:SetPos(oldpos)
