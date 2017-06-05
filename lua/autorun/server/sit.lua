@@ -430,7 +430,7 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 		if ply.UnStuck then
 			local pos,ang = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
 		
-			ply:UnStuck(pos, pos, OnExit)
+			ply:UnStuck(pos, OnExit)
 		else
 			timer.Simple(0, function()
 				ply:SetPos(self:GetPos()+Vector(0,0,36))
