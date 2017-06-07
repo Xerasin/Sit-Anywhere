@@ -434,7 +434,8 @@ local PickupAllowed = {
 	"PhysgunPickup"
 }
 
-local function CheckSeat(ply, ent)
+local CheckSeat
+function CheckSeat(ply, ent)
 	if not ply:InVehicle() then return true end
 
 	local vehicle = ply:GetVehicle()
