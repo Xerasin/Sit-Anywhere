@@ -74,8 +74,6 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 
 		vehicle:SetParent(parent)
 		vehicle.parent=parent
-
-		parent.GetSitter = ply
 	else
 		vehicle.OnWorld = true
 	end
@@ -424,9 +422,6 @@ local function UndoSitting(self, ply)
 		ply.sitting_allowswep = nil
 		ply:SetAllowWeaponsInVehicle(prev)
 	end
-	if self.parent then
-		self.parent.GetSitter = nil
-	end
 	if(self.exit) then
 		self.exit(ply)
 	end
@@ -441,8 +436,22 @@ local PickupAllowed = {
 
 for _,v in next, PickupAllowed do
 	hook.Add(v, "SA_DontTouchYourself", function(ply, ent)
-		if ent.GetSitter == ply then
-			return false
+		if ply:InVehicle() and IsValid(ent) then
+			local vehicle = ply:GetVehicle()
+			local parent = vehicle.parent
+			while ent do
+				if IsValid(parent) then
+					if parent:IsVehicle() then
+						parent = parent.parent
+					else
+						for _,v in next, constraint.GetAllConstrainedEntities(ent) do
+							if parent == v then
+								return false
+							end
+						end
+					end
+				end
+			end
 		end
 	end)
 end
