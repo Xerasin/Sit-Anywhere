@@ -448,7 +448,9 @@ for _,v in next, PickupAllowed do
 end
 
 hook.Add("PlayerSwitchWeapon", "VehicleFOVFix", function(ply, ent)
-	ply:SetFOV(ply:GetFOV(),0)
+	if IsValid(ply) and ply:InVehicle() then
+		ply:SetFOV(ply:GetFOV(),0)
+	end
 end)
 
 hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
