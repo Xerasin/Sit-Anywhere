@@ -15,6 +15,7 @@ local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0
 local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_NOTIFY})
 local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_NOTIFY})
 local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_NOTIFY})
+local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_NOTIFY})
 local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
 
@@ -464,7 +465,9 @@ end
 
 for _,v in next, PickupAllowed do
 	hook.Add(v, "SA_DontTouchYourself", function(ply, ent)
-		if CheckSeat(ply, ent) == false then return false end
+		if AntiPropSurf:GetBool() then
+			if CheckSeat(ply, ent) == false then return false end
+		end
 	end)
 end
 
