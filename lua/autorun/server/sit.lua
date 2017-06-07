@@ -434,25 +434,36 @@ local PickupAllowed = {
 	"PhysgunPickup"
 }
 
-for _,v in next, PickupAllowed do
-	hook.Add(v, "SA_DontTouchYourself", function(ply, ent)
-		if ply:InVehicle() and IsValid(ent) then
-			local vehicle = ply:GetVehicle()
-			local parent = vehicle.parent
-			while ent do
-				if IsValid(parent) then
-					if parent:IsVehicle() then
-						parent = parent.parent
-					else
-						for _,v in next, constraint.GetAllConstrainedEntities(ent) do
-							if parent == v then
-								return false
-							end
-						end
-					end
-				end
+local function CheckSeat(ply, ent)
+	if not ply:InVehicle() then return true end
+
+	local vehicle = ply:GetVehicle()
+	local parent = vehicle.parent
+
+	if parent == ent then
+		return false
+	end
+
+	for _,v in next, ent:GetChildren() do
+		if IsValid(v) then
+			if CheckSeat(ply, v) == false then
+				return false
 			end
 		end
+	end
+
+	for _,v in next, constraint.GetAllConstrainedEntities(ent) do
+		if IsValid(v) then
+			if CheckSeat(ply, v) == false then
+				return false
+			end
+		end
+	end
+end
+
+for _,v in next, PickupAllowed do
+	hook.Add(v, "SA_DontTouchYourself", function(ply, ent)
+		if CheckSeat(ply, ent) == false then return false end
 	end)
 end
 
