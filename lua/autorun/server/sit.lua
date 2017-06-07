@@ -448,7 +448,7 @@ function CheckSeat(ply, ent)
 
 	for _,v in next, ent:GetChildren() do
 		if IsValid(v) then
-			if CheckSeat(ply, v) == false then
+			if v ~= ent and CheckSeat(ply, v) == false then
 				return false
 			end
 		end
@@ -456,7 +456,7 @@ function CheckSeat(ply, ent)
 
 	for _,v in next, constraint.GetAllConstrainedEntities(ent) do
 		if IsValid(v) then
-			if CheckSeat(ply, v) == false then
+			if v ~= ent and CheckSeat(ply, v) == false then
 				return false
 			end
 		end
