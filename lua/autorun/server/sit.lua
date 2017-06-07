@@ -24,6 +24,7 @@ end
 
 local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	ply:ExitVehicle()
+
 	local vehicle = ents.Create("prop_vehicle_prisoner_pod")
 	vehicle:SetAngles(ang)
 	pos = pos + vehicle:GetUp()*18
@@ -43,7 +44,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	-- Let's try not to crash
 	vehicle:SetMoveType(MOVETYPE_PUSH)
 	vehicle:GetPhysicsObject():Sleep()
-	vehicle:SetCollisionGroup(COLLISION_GROUP_NONE)
+	vehicle:SetCollisionGroup(COLLISION_GROUP_WORLD)
 
 	vehicle:SetNotSolid(true)
 	vehicle:GetPhysicsObject():Sleep()
@@ -51,6 +52,8 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle:GetPhysicsObject():EnableMotion(false)
 	vehicle:GetPhysicsObject():EnableCollisions(false)
 	vehicle:GetPhysicsObject():SetMass(1)
+
+	vehicle:CollisionRulesChanged()
 
 	-- Visibles
 	vehicle:DrawShadow(false)
@@ -61,13 +64,16 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle.VehicleName = "Airboat Seat"
 	vehicle.ClassOverride = "prop_vehicle_prisoner_pod"
 
+	vehicle.PhysgunDisabled = true
+	vehicle.m_tblToolsAllowed = {}
+	vehicle.customCheck = function() return false end -- DarkRP plz
+
 	if parent and parent:IsValid() then
 		local r = math.rad(ang.yaw+90)
 		vehicle.plyposhack = vehicle:WorldToLocal(pos + Vector(math.cos(r)*2,math.sin(r)*2,2))
 
 		vehicle:SetParent(parent)
 		vehicle.parent=parent
-
 	else
 		vehicle.OnWorld = true
 	end
@@ -80,10 +86,15 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		ply:SetAllowWeaponsInVehicle(true)
 	end
 
+	timer.Simple(0, function()
+		ply:SetFOV(ply:GetFOV(),0) -- FOV Bug Fix.
+	end)
+
 	ply:EnterVehicle(vehicle)
 
 	if PlayerDamageOnSeats:GetBool() then
 		ply:SetCollisionGroup(COLLISION_GROUP_WEAPON)
+		ply:CollisionRulesChanged()
 	end
 
 	vehicle.removeonexit = true
@@ -186,7 +197,7 @@ local function FindPose(this,me)
 end
 
 
-local blacklist = { ["gmod_wire_keyboard"] = true }
+local blacklist = { ["gmod_wire_keyboard"] = true, ["prop_combine_ball"] = true}
 local model_blacklist = {  -- I need help finding out why these crash
 	--[[["models/props_junk/sawblade001a.mdl"] = true,
 	["models/props_c17/furnitureshelf001b.mdl"] = true,
@@ -417,6 +428,52 @@ local function UndoSitting(self, ply)
 	self:Remove()
 end
 
+
+local PickupAllowed = {
+	"GravGunPickupAllowed",
+	"PhysgunPickup"
+}
+
+local CheckSeat
+function CheckSeat(ply, ent)
+	if not ply:InVehicle() then return true end
+
+	local vehicle = ply:GetVehicle()
+	local parent = vehicle.parent
+
+	if parent == ent then
+		return false
+	end
+
+	for _,v in next, ent:GetChildren() do
+		if IsValid(v) then
+			if CheckSeat(ply, v) == false then
+				return false
+			end
+		end
+	end
+
+	for _,v in next, constraint.GetAllConstrainedEntities(ent) do
+		if IsValid(v) then
+			if CheckSeat(ply, v) == false then
+				return false
+			end
+		end
+	end
+end
+
+for _,v in next, PickupAllowed do
+	hook.Add(v, "SA_DontTouchYourself", function(ply, ent)
+		if CheckSeat(ply, ent) == false then return false end
+	end)
+end
+
+hook.Add("PlayerSwitchWeapon", "VehicleFOVFix", function(ply, ent)
+	if IsValid(ply) and ply:InVehicle() then
+		ply:SetFOV(ply:GetFOV(),0)
+	end
+end)
+
 hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if not self.playerdynseat then return end
 	if CurTime()<NextUse[ply] then return false end
@@ -468,6 +525,8 @@ hook.Add("PlayerDeath","SitSeat",function(pl)
 end)
 
 hook.Add("PlayerEnteredVehicle","unsits",function(pl,veh)
+	pl:SetFOV(pl:GetFOV(),0) -- FOV Fix
+
 	for k,v in next,player.GetAll() do
 		if v~=pl and v:InVehicle() and v:GetVehicle():IsValid() and v:GetVehicle():GetParent()==pl then
 			v:ExitVehicle()
@@ -479,7 +538,6 @@ hook.Add("PlayerEnteredVehicle","unsits",function(pl,veh)
 	if veh:GetParent():IsValid() then
 		DropEntityIfHeld( veh:GetParent() )
 	end
-
 end)
 
 hook.Add("EntityRemoved","Sitting_EntityRemoved",function(ent)
