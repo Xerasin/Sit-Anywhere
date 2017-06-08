@@ -470,6 +470,8 @@ function CheckSeat(ply, ent, tbl)
 	end
 end
 local function CheckSeat2(ply, ent)
+	if not IsValid(ply:GetVehicle()) or not ply:GetVehicle().playerdynseat then return end
+	
 	if cache[ply:SteamID()] and cache[ply:SteamID()][ent:EntIndex()] and (CurTime() - cache[ply:SteamID()][ent:EntIndex()][1]) < 5 then
 		return cache[ply:SteamID()][ent:EntIndex()][2]
 	end
