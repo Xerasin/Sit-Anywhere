@@ -16,6 +16,7 @@ local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCV
 local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_NOTIFY})
 local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_NOTIFY})
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_NOTIFY})
+local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_NOTIFY})
 local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
 
@@ -474,6 +475,12 @@ for _,v in next, PickupAllowed do
 		end
 	end)
 end
+
+hook.Add("CanTool", "SA_DontTouchYourself", function(ply, tr)
+	if AntiToolAbuse:GetBool() and IsValid(tr.Entity) then
+		if CheckSeat(ply, tr.Entity, {}) == false then return false end
+	end
+end)
 
 hook.Add("PlayerSwitchWeapon", "VehicleFOVFix", function(ply, ent)
 	if IsValid(ply) and ply:InVehicle() then
