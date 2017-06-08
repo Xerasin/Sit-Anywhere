@@ -2,20 +2,21 @@ AddCSLuaFile("lua/autorun/client/sit.lua")
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({},{__mode='k', __index=function() return 0 end})
 
-local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_NOTIFY})
+local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_NOTIFY, FCVAR_ARCHIVE})
 --[[
 	0 - Can't sit on any ents
 	1 - Can't sit on any player ents
 	2 - Can only sit on your own ents
 	3 - Any
 ]]
-local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_NOTIFY})
-local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_NOTIFY})
-local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_NOTIFY})
-local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_NOTIFY})
-local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_NOTIFY})
-local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_NOTIFY})
-local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_NOTIFY})
+local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
 local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
 
@@ -454,12 +455,14 @@ function CheckSeat(ply, ent, tbl)
 			end
 		end
 	end
-
-	for _,v in next, constraint.GetAllConstrainedEntities(ent) do
-		if IsValid(v) and not tbl[v] then
-			tbl[v] = true
-			if v ~= ent and CheckSeat(ply, v, tbl) == false then
-				return false
+	local cEnts = constraint.GetAllConstrainedEntities(ent)
+	if cEnts then
+		for _,v in next, cEnts do
+			if IsValid(v) and not tbl[v] then
+				tbl[v] = true
+				if v ~= ent and CheckSeat(ply, v, tbl) == false then
+					return false
+				end
 			end
 		end
 	end
@@ -472,6 +475,12 @@ for _,v in next, PickupAllowed do
 		end
 	end)
 end
+
+hook.Add("CanTool", "SA_DontTouchYourself", function(ply, tr)
+	if AntiToolAbuse:GetBool() and IsValid(tr.Entity) then
+		if CheckSeat(ply, tr.Entity, {}) == false then return false end
+	end
+end)
 
 hook.Add("PlayerSwitchWeapon", "VehicleFOVFix", function(ply, ent)
 	if IsValid(ply) and ply:InVehicle() then
