@@ -435,9 +435,11 @@ local PickupAllowed = {
 	"GravGunPickupAllowed",
 	"PhysgunPickup"
 }
+local cache = {}
 
 local CheckSeat
 function CheckSeat(ply, ent, tbl)
+	
 	if not ply:InVehicle() then return true end
 
 	local vehicle = ply:GetVehicle()
@@ -467,18 +469,26 @@ function CheckSeat(ply, ent, tbl)
 		end
 	end
 end
+local function CheckSeat2(ply, ent)
+	if cache[ply:SteamID()] and cache[ply:SteamID()][ent:EntIndex()] and (CurTime() - cache[ply:SteamID()][ent:EntIndex()][1]) < 5 then
+		return cache[ply:SteamID()][ent:EntIndex()][2]
+	end
+	cache[ply:SteamID()] = cache[ply:SteamID()] or {}
+	cache[ply:SteamID()][ent:EntIndex()] = {CurTime(), CheckSeat(ply, ent, {})}
+	return cache[ply:SteamID()][ent:EntIndex()][2]
+end
 
 for _,v in next, PickupAllowed do
 	hook.Add(v, "SA_DontTouchYourself", function(ply, ent)
 		if AntiPropSurf:GetBool() then
-			if CheckSeat(ply, ent, {}) == false then return false end
+			if CheckSeat2(ply, ent) == false then return false end
 		end
 	end)
 end
 
 hook.Add("CanTool", "SA_DontTouchYourself", function(ply, tr)
 	if AntiToolAbuse:GetBool() and IsValid(tr.Entity) then
-		if CheckSeat(ply, tr.Entity, {}) == false then return false end
+		if CheckSeat2(ply, tr.Entity) == false then return false end
 	end
 end)
 
