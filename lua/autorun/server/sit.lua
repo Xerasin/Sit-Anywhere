@@ -454,12 +454,14 @@ function CheckSeat(ply, ent, tbl)
 			end
 		end
 	end
-
-	for _,v in next, constraint.GetAllConstrainedEntities(ent) do
-		if IsValid(v) and not tbl[v] then
-			tbl[v] = true
-			if v ~= ent and CheckSeat(ply, v, tbl) == false then
-				return false
+	local cEnts = constraint.GetAllConstrainedEntities(ent)
+	if cEnts then
+		for _,v in next, cEnts do
+			if IsValid(v) and not tbl[v] then
+				tbl[v] = true
+				if v ~= ent and CheckSeat(ply, v, tbl) == false then
+					return false
+				end
 			end
 		end
 	end
