@@ -312,12 +312,11 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			ply:ChatPrint("You've disabled sitting on players!")
 			return
 		end
-		
-		local vehicle = Sit(ply, EyeTrace.HitPos - Vector( 0, 0, 20 ), ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
+		local min, max = ent:GetCollisionBounds()
+		local vehicle = Sit(ply, ent:GetPos() + Vector( 0, 0, 10 + max.z/2), ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
 		return vehicle
 	end
 	
-
 	local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
 	if(math.abs(ang.pitch) <= 15) then
 		local ang = Angle()
