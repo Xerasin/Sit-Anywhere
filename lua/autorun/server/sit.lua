@@ -313,7 +313,8 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			return
 		end
 		local min, max = ent:GetCollisionBounds()
-		local vehicle = Sit(ply, ent:GetPos() + Vector( 0, 0, 10 + max.z/2), ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
+		local zadjust = math.abs( min.z ) + math.abs( max.z )
+		local vehicle = Sit(ply, ent:GetPos() + Vector( 0, 0, 10 + zadjust/2), ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
 		return vehicle
 	end
 	
