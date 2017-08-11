@@ -102,8 +102,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle.removeonexit = true
 	vehicle.exit = exit
 	vehicle.sittingPly = ply
-	
-	local ang = vehicle:GetAngles()
+		
 	ply:SetEyeAngles(Angle(0,90,0))
 	if func then
 		func(ply)
@@ -294,13 +293,6 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 		end
 	end
 
-	local EyeTrace2Tr = util.GetPlayerTrace(ply)
-	EyeTrace2Tr.filter = ply
-	EyeTrace2Tr.mins = Vector(-5,-5,-5)
-	EyeTrace2Tr.maxs = Vector(5,5,5)
-	local EyeTrace2 = util.TraceHull(EyeTrace2Tr)
-	--if EyeTrace2.Entity ~= EyeTrace.Entity then return end
-	
 	if( IsValid( EyeTrace.Entity ) and EyeTrace.Entity:IsPlayer() and EyeTrace.Entity == ply:GetGroundEntity() )then
 		local ent = EyeTrace.Entity
 		if ent:IsPlayer() and not SittingOnPlayer2:GetBool() then return end
@@ -528,7 +520,7 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if ShouldAlwaysSit(ply) then
 		-- Movie gamemode
 		if ply.UnStuck then
-			local pos,ang = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
+			local pos = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
 			if ms then
 				ply:UnStuck()
 				ply:SetPos(pos)
@@ -631,19 +623,19 @@ hook.Add("InitPostEntity", "SAW_CompatFix", function()
 			return false
 		end
 		hook.Add("CanExitVehicle", "PAS_ExitVehicle", function( veh, ply )
-			if !IsSCarSeat( veh ) and not veh.playerdynseat and veh.vehicle then
-				// L+R
+			if not IsSCarSeat( veh ) and not veh.playerdynseat and veh.vehicle then
+				-- L+R
 				if ply:VisibleVec( veh:LocalToWorld(Vector(80, 0, 5) )) then
 						ply:ExitVehicle()
 						ply:SetPos( veh:LocalToWorld(Vector(75, 0, 5) ))
-						if veh:GetClass() == "prop_vehicle_prisoner_pod" && !(ply == veh.vehicle:GetDriver()) then PM_SendPassengers( veh.vehicle:GetDriver() ) end
+						if veh:GetClass() == "prop_vehicle_prisoner_pod" and not (ply == veh.vehicle:GetDriver()) then PM_SendPassengers( veh.vehicle:GetDriver() ) end
 						return false
 				end
 
 				if ply:VisibleVec( veh:LocalToWorld(Vector(-80, 0, 5) )) then
 						ply:ExitVehicle()
 						ply:SetPos( veh:LocalToWorld(Vector(-75, 0, 5) ))
-						if veh:GetClass() == "prop_vehicle_prisoner_pod" && !(ply == veh.vehicle:GetDriver()) then PM_SendPassengers( veh.vehicle:GetDriver() ) end
+						if veh:GetClass() == "prop_vehicle_prisoner_pod" and not (ply == veh.vehicle:GetDriver()) then PM_SendPassengers( veh.vehicle:GetDriver() ) end
 						return false
 				end
 			end
