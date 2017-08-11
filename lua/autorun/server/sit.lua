@@ -300,7 +300,23 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 	EyeTrace2Tr.maxs = Vector(5,5,5)
 	local EyeTrace2 = util.TraceHull(EyeTrace2Tr)
 	--if EyeTrace2.Entity ~= EyeTrace.Entity then return end
-
+	
+	if( IsValid( EyeTrace.Entity ) and EyeTrace.Entity:IsPlayer() and EyeTrace.Entity == ply:GetGroundEntity() )then
+		local ent = EyeTrace.Entity
+		if ent:IsPlayer() and not SittingOnPlayer2:GetBool() then return end
+		if ent:IsPlayer() and ent:GetInfoNum("sitting_disallow_on_me",0)==1 then
+			ply:ChatPrint(ent:Name()..' has disabled sitting!')
+			return
+		end
+		if ent:IsPlayer() and sitting_disallow_on_me then
+			ply:ChatPrint("You've disabled sitting on players!")
+			return
+		end
+		local min, max = ent:GetCollisionBounds()
+		local vehicle = Sit(ply, ent:GetPos() + Vector( 0, 0, 10 + max.z/2), ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
+		return vehicle
+	end
+	
 	local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
 	if(math.abs(ang.pitch) <= 15) then
 		local ang = Angle()
