@@ -522,9 +522,11 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 		if ply.UnStuck then
 			local pos = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
 			if ms then
-				ply:UnStuck()
-				ply:SetPos(pos)
-				OnExit()
+				timer.Simple(0, function()
+					ply:UnStuck()
+					ply:SetPos(oldpos)
+					OnExit()
+				end)
 			else
 				ply:UnStuck(pos, OnExit)
 			end
@@ -539,9 +541,11 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 		local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
 		if ply.UnStuck then
 			if ms then
-				ply:UnStuck()
-				ply:SetPos(oldpos)
-				OnExit()
+				timer.Simple(0, function()
+					ply:UnStuck()
+					ply:SetPos(oldpos)
+					OnExit()
+				end)
 			else
 				ply:UnStuck(oldpos, OnExit)
 			end
