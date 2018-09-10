@@ -43,17 +43,23 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle:Spawn()
 	vehicle:Activate()
 	
+	if not IsValid(vehicle) or not IsValid(vehicle:GetPhysicsObject()) then 
+		SafeRemoveEntity(vehicle)
+		return false 
+	end
+
+	local phys = vehicle:GetPhysicsObject()
 	-- Let's try not to crash
 	vehicle:SetMoveType(MOVETYPE_PUSH)
-	vehicle:GetPhysicsObject():Sleep()
+	phys:Sleep()
 	vehicle:SetCollisionGroup(COLLISION_GROUP_WORLD)
 
 	vehicle:SetNotSolid(true)
-	vehicle:GetPhysicsObject():Sleep()
-	vehicle:GetPhysicsObject():EnableGravity(false)
-	vehicle:GetPhysicsObject():EnableMotion(false)
-	vehicle:GetPhysicsObject():EnableCollisions(false)
-	vehicle:GetPhysicsObject():SetMass(1)
+	phys:Sleep()
+	phys:EnableGravity(false)
+	phys:EnableMotion(false)
+	phys:EnableCollisions(false)
+	phys:SetMass(1)
 
 	vehicle:CollisionRulesChanged()
 
@@ -257,8 +263,11 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 				local vec,ang = LocalToWorld(pose.Pos, pose.Ang, pos, v:GetAngles())
 				if v:GetParent() == ply then return end
 				local ent = Sit(ply, vec, ang, v, 0, pose.Func, pose.OnExitFunc)
-				ent.PlayerOnPlayer = true
-				v.SittingOnMe = ent
+				if ent and IsValid(ent) then
+					ent.PlayerOnPlayer = true
+					v.SittingOnMe = ent
+				end
+
 				return ent
 			end
 		end
