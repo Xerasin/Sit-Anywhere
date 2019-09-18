@@ -1,4 +1,5 @@
 AddCSLuaFile("lua/autorun/client/sit.lua")
+if CLIENT then return end
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({},{__mode='k', __index=function() return 0 end})
 
@@ -17,6 +18,8 @@ local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_NOTIFY, FCVAR_ARC
 local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
 local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+
 local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
 
@@ -287,7 +290,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			if(SitOnEntsMode:GetInt() == 1) then
 				if(not EyeTrace.HitWorld) then
 					local owner = EyeTrace.Entity:CPPIGetOwner()
-					if(owner ~= nil and owner:IsValid() and owner:IsPlayer()) then
+					if(type(owner) == "Player" and owner ~= nil and owner:IsValid() and owner:IsPlayer()) then
 						return
 					end
 				end
@@ -295,7 +298,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			if(SitOnEntsMode:GetInt() == 2) then
 				if(not EyeTrace.HitWorld) then
 					local owner = EyeTrace.Entity:CPPIGetOwner()
-					if(owner ~= nil and owner:IsValid() and owner:IsPlayer() and owner ~= ply) then
+					if(type(owner) == "Player" and owner ~= nil and owner:IsValid() and owner:IsPlayer() and owner ~= ply) then
 						return
 					end
 				end
@@ -307,10 +310,12 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 	EyeTrace2Tr.filter = ply
 	EyeTrace2Tr.mins = Vector(-5,-5,-5)
 	EyeTrace2Tr.maxs = Vector(5,5,5)
+	
 	local EyeTrace2 = util.TraceHull(EyeTrace2Tr)
 	--if EyeTrace2.Entity ~= EyeTrace.Entity then return end
 
 	local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
+	
 	if(math.abs(ang.pitch) <= 15) then
 		local ang = Angle()
 		local filter = player.GetAll()
@@ -338,7 +343,13 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			distsang[I] = trace
 		end
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
-
+		
+		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() then
+			if not ply:GetNWBool("ground_sit") then
+				ply:ConCommand("ground_sit")
+				return
+			end
+		end
 		if(ang_smallest_hori and distsang[infront].Hit and distsang[infront].Distance > 14 and smallest_hori <= 16) then
 			local hori = distsang[ang_smallest_hori].HorizontalTrace
 			ang.yaw = (hori.HitNormal:Angle().yaw - 90)
@@ -407,6 +418,7 @@ end
 
 
 local function sitcmd(ply)
+	if not IsValid(ply) then return end
 	if ply:InVehicle() then return end
 	if AdminOnly:GetBool() then
 		if not ply:IsAdmin() then return end
