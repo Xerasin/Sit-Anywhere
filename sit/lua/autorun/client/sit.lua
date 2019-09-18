@@ -107,21 +107,26 @@ hook.Add("KeyPress","seats_use",function(ply,key)
 	end
 
 	if not good then return end
-	
-	if newUI:GetInt() == 2 or newUI:GetInt() == 1 then
-		local EyeTrace = ply:GetEyeTrace()
-		local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
-		if(math.abs(ang.pitch) <= 15) then
-			if activeTimer.startTime == nil then
-				activeTimer.startTime = SysTime()
-				activeTimer.timeToSit = sitTimer:GetFloat()
-				activeTimer.trace = ply:GetEyeTrace()
-				activeTimer.drawType = newUI:GetInt()
+	local trace = LocalPlayer():GetEyeTrace()
+	local ang = trace.HitNormal:Angle() + Angle(-270, 0, 0)
+
+
+	if trace.Hit and trace.HitPos:Distance(trace.StartPos) < 80 and math.abs(ang.pitch) <= 15 then
+		if newUI:GetInt() == 2 or newUI:GetInt() == 1 then
+			local EyeTrace = ply:GetEyeTrace()
+			local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
+			if(math.abs(ang.pitch) <= 15) then
+				if activeTimer.startTime == nil then
+					activeTimer.startTime = SysTime()
+					activeTimer.timeToSit = sitTimer:GetFloat()
+					activeTimer.trace = ply:GetEyeTrace()
+					activeTimer.drawType = newUI:GetInt()
+				end
 			end
+		else
+			activeTimer = {}
+			RunConsoleCommand("sit")
 		end
-	else
-		activeTimer = {}
-		RunConsoleCommand("sit")
 	end
 end)
 
