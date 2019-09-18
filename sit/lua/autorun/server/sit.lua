@@ -19,6 +19,8 @@ local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_NOTIFY, FCVAR_AR
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
 local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
 local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
+
 
 local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
@@ -248,7 +250,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			and v:GetDriver():IsValid()
 			and not v.PlayerSitOnPlayer
 			) then
-				if v:GetDriver():GetInfoNum("sitting_disallow_on_me",0)~=0 then
+				if v:GetDriver():GetInfoNum("sitting_disallow_on_me",0) ~= 0 then
 					ply:ChatPrint(v:GetDriver():Name()..' has disabled sitting!')
 					return
 				end
