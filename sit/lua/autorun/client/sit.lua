@@ -5,6 +5,7 @@ local sitTimer = CreateClientConVar("sitting_sit_timer",           "0.25", true,
 local sitStartTimer = CreateClientConVar("sitting_sit_starttimer", "0.75", true, true)
 local groundSit = CreateClientConVar("sitting_ground_sit",         "1.00", true, true)
 local notOnMe = CreateClientConVar("sitting_disallow_on_me",       "0.00", true, true)
+local forceBinds = CreateClientConVar("sitting_force_binds",       "1", true, true)
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 local activeTimer = {}
 
@@ -90,10 +91,14 @@ hook.Add("KeyPress","seats_use",function(ply,key)
 	local good = not useAlt:GetBool()
 	local alwaysSit = ShouldSit(ply)
 
-	if useAlt:GetBool() and (input.IsKeyDown(KEY_LALT) or input.IsKeyDown(KEY_RALT)) then
-		good = true
+	if forceBinds:GetBool() then
+		if useAlt:GetBool() and (input.IsKeyDown(KEY_LALT) or input.IsKeyDown(KEY_RALT)) then
+			good = true
+		end
 	else
-
+		if useAlt:GetBool() and ply:KeyDown(IN_WALK) then
+			good = true
+		end
 	end
 
 	if SittingNoAltServer:GetBool() then
