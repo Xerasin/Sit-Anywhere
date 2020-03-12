@@ -319,7 +319,6 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 	end
 
 	local valid, ent = ValidSitEntity(ply, EyeTrace)
-	print(valid, ent)
 	if ent then return ent end
 	if not valid then return end
 	
