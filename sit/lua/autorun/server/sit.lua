@@ -3,22 +3,22 @@ if CLIENT then return end
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({},{__mode='k', __index=function() return 0 end})
 
-local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_ARCHIVE})
 --[[
 	0 - Can't sit on any ents
 	1 - Can't sit on any player ents
 	2 - Can only sit on your own ents
 	3 - Any
 ]]
-local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
-local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_NOTIFY, FCVAR_ARCHIVE})
+local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_ARCHIVE})
+local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_ARCHIVE})
+local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_ARCHIVE})
+local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_ARCHIVE})
+local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE})
+local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_ARCHIVE})
+local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE})
+local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE})
+local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_ARCHIVE})
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 
 
@@ -119,6 +119,8 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	if func then
 		func(ply)
 	end
+
+	hook.Run("OnPlayerSit", ply, pos, ang, parent, parentbone, vehicle)
 
 	return vehicle
 end
@@ -225,19 +227,18 @@ local model_blacklist = {  -- I need help finding out why these crash
 	["models/props_phx/construct/metal_plate4x4.mdl"] = true,
 	["models/props_phx/construct/metal_plate4x4_tri.mdl"] = true,]]
 }
+function ValidSitEntity(ply, EyeTrace)
+	if not EyeTrace.Hit then return false end
+	if EyeTrace.HitPos:Distance(EyeTrace.StartPos) > 100 then return false end
+	local t = hook.Run("AllowSit", ply, EyeTrace)
 
-function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
-	if EyeTrace == nil then
-		EyeTrace = ply:GetEyeTrace()
-	elseif type(EyeTrace)=="Vector" then
-		return Sit(ply, EyeTrace, ang or Angle(0,0,0), parent, parentbone or 0, func, exit)
+	if t == false or t == true then 
+		return t 
 	end
 
-	if not EyeTrace.Hit then return end
-	if EyeTrace.HitPos:Distance(EyeTrace.StartPos) > 100 then return end
+	local sitting_disallow_on_me = ply:GetInfoNum("sitting_disallow_on_me",0) == 1
 
-	local sitting_disallow_on_me = ply:GetInfoNum("sitting_disallow_on_me",0)==1
-	if SittingOnPlayer:GetBool() then
+	if SittingOnPlayer:GetBool() then -- Sitting on SITTING Players
 		for k,v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do
 			local safe=256
 			while IsValid(v.SittingOnMe) and safe>0 do
@@ -245,19 +246,19 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 				v=v.SittingOnMe
 			end
 			if(v:GetClass() == "prop_vehicle_prisoner_pod"
-			and v:GetModel() ~= "models/vehicles/prisoner_pod_inner.mdl"
-			and v:GetDriver()
-			and v:GetDriver():IsValid()
-			and not v.PlayerSitOnPlayer
+				and v:GetModel() ~= "models/vehicles/prisoner_pod_inner.mdl"
+				and v:GetDriver()
+				and v:GetDriver():IsValid()
+				and not v.PlayerSitOnPlayer
 			) then
 				if v:GetDriver():GetInfoNum("sitting_disallow_on_me",0) ~= 0 then
 					ply:ChatPrint(v:GetDriver():Name()..' has disabled sitting!')
-					return
+					return false 
 				end
 
 				if sitting_disallow_on_me then
 					ply:ChatPrint("You've disabled sitting on players!")
-					return
+					return false 
 				end
 
 				local pose = FindPose(v,ply) -- SittingOnPlayerPoses[math.random(1, #SittingOnPlayerPoses)]
@@ -265,57 +266,70 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 				if(v.plyposhack) then
 					pos = v:LocalToWorld(v.plyposhack)
 				end
-				local vec,ang = LocalToWorld(pose.Pos, pose.Ang, pos, v:GetAngles())
-				if v:GetParent() == ply then return end
+				local vec, ang = LocalToWorld(pose.Pos, pose.Ang, pos, v:GetAngles())
+				if v:GetParent() == ply then return false end
 				local ent = Sit(ply, vec, ang, v, 0, pose.Func, pose.OnExitFunc)
 				if ent and IsValid(ent) then
 					ent.PlayerOnPlayer = true
 					v.SittingOnMe = ent
 				end
 
-				return ent
+				return true, ent
 			end
 		end
 	else
 		for k,v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do
 			if(v.removeonexit) then
-				return
+				return false 
 			end
 		end
 	end
-
-	if(not EyeTrace.HitWorld and SitOnEntsMode:GetInt() == 0) then return end
-	if(not EyeTrace.HitWorld and blacklist[string.lower(EyeTrace.Entity:GetClass())]) then return end
-	if(not EyeTrace.HitWorld and EyeTrace.Entity:GetModel() and model_blacklist[string.lower(EyeTrace.Entity:GetModel())]) then return end
+	
+	
+	if(not EyeTrace.HitWorld and SitOnEntsMode:GetInt() == 0) then return false end
+	if(not EyeTrace.HitWorld and blacklist[string.lower(EyeTrace.Entity:GetClass())]) then return false end
+	if(not EyeTrace.HitWorld and EyeTrace.Entity:GetModel() and model_blacklist[string.lower(EyeTrace.Entity:GetModel())]) then return false end
 	if(EMETA.CPPIGetOwner) then
 		if(SitOnEntsMode:GetInt() >= 1) then
 			if(SitOnEntsMode:GetInt() == 1) then
 				if(not EyeTrace.HitWorld) then
 					local owner = EyeTrace.Entity:CPPIGetOwner()
 					if(type(owner) == "Player" and owner ~= nil and owner:IsValid() and owner:IsPlayer()) then
-						return
+						return false
 					end
 				end
-			end
-			if(SitOnEntsMode:GetInt() == 2) then
+			elseif(SitOnEntsMode:GetInt() == 2) then
 				if(not EyeTrace.HitWorld) then
 					local owner = EyeTrace.Entity:CPPIGetOwner()
 					if(type(owner) == "Player" and owner ~= nil and owner:IsValid() and owner:IsPlayer() and owner ~= ply) then
-						return
+						return false
 					end
 				end
 			end
 		end
 	end
+	
+	return true
+end
+function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
+	if EyeTrace == nil then
+		EyeTrace = ply:GetEyeTrace()
+	elseif type(EyeTrace)=="Vector" then
+		return Sit(ply, EyeTrace, ang or Angle(0,0,0), parent, parentbone or 0, func, exit)
+	end
 
+	local valid, ent = ValidSitEntity(ply, EyeTrace)
+	print(valid, ent)
+	if ent then return ent end
+	if not valid then return end
+	
 	local EyeTrace2Tr = util.GetPlayerTrace(ply)
 	EyeTrace2Tr.filter = ply
 	EyeTrace2Tr.mins = Vector(-5,-5,-5)
 	EyeTrace2Tr.maxs = Vector(5,5,5)
 	
 	local EyeTrace2 = util.TraceHull(EyeTrace2Tr)
-	--if EyeTrace2.Entity ~= EyeTrace.Entity then return end
-
+	
 	local ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
 	
 	if(math.abs(ang.pitch) <= 15) then
@@ -347,6 +361,11 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
 		
 		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() then
+			local t = hook.Run("OnGroundSit", ply, EyeTrace)
+			if t == false then 
+				return 
+			end
+
 			if not ply:GetNWBool("ground_sit") then
 				ply:ConCommand("ground_sit")
 				return
@@ -372,16 +391,19 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			local vehicle = Sit(ply, EyeTrace.HitPos-Vector(0,0,20), ang, ent, EyeTrace.PhysicsBone or 0)
 			return vehicle
 		else
+			
 			table.sort(dists, function(a,b) return b.Distance < a.Distance end)
 			local wants = {}
-			local eyeang = ply:EyeAngles() + Angle(0,180,0)
+			local eyeang = ply:EyeAngles() + Angle(0, 180, 0)
 			for I=1,#dists do
 				local trace = dists[I]
 				local behind = distsang[(trace.ang + 180) % 360]
 				if behind.Distance2 > 3 then
 					local cost = 0
-					if(trace.ang % 90 ~= 0) then cost = cost + 12 end
-					if(math.abs(eyeang.yaw - trace.ang) > 12) then
+					if(trace.ang % 45 ~= 0) then 
+						cost = cost + 12 
+					end
+					if math.abs(eyeang.yaw - trace.ang) > 12 then
 						cost = cost + 30
 					end
 					local tbl = {
@@ -391,6 +413,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 					table.insert(wants, tbl)
 				end
 			end
+
 			table.sort(wants,function(a,b) return b.cost > a.cost end)
 			if(#wants == 0) then return end
 			ang.yaw = (wants[1].ang - 90)
