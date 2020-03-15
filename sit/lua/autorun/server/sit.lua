@@ -251,15 +251,16 @@ function ValidSitEntity(ply, EyeTrace)
 				and v:GetDriver():IsValid()
 				and not v.PlayerSitOnPlayer
 			) then
+
 				if v:GetDriver():GetInfoNum("sitting_disallow_on_me",0) ~= 0 then
 					ply:ChatPrint(v:GetDriver():Name()..' has disabled sitting!')
 					return false 
 				end
 
-				if sitting_disallow_on_me then
+				--[[if sitting_disallow_on_me then
 					ply:ChatPrint("You've disabled sitting on players!")
 					return false 
-				end
+				end]]
 
 				local pose = FindPose(v,ply) -- SittingOnPlayerPoses[math.random(1, #SittingOnPlayerPoses)]
 				local pos = v:GetDriver():GetPos()
@@ -399,6 +400,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 				local behind = distsang[(trace.ang + 180) % 360]
 				if behind.Distance2 > 3 then
 					local cost = 0
+					
 					if math.abs(eyeang.yaw - trace.ang) > 6 then
 						cost = cost + 30
 					end
