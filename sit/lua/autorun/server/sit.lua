@@ -378,6 +378,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 				return
 			end
 		end
+		
 		if(ang_smallest_hori and distsang[infront].Hit and distsang[infront].Distance > 14 and smallest_hori <= 16) then
 			local hori = distsang[ang_smallest_hori].HorizontalTrace
 			ang.yaw = (hori.HitNormal:Angle().yaw - 90)
@@ -390,10 +391,11 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 					ply:ChatPrint(ent:Name()..' has disabled sitting!')
 					return
 				end
-				if ent:IsPlayer() and sitting_disallow_on_me then
+
+				--[[if ent:IsPlayer() and sitting_disallow_on_me then
 					ply:ChatPrint("You've disabled sitting on players!")
 					return
-				end
+				end]]
 			end
 			local vehicle = Sit(ply, EyeTrace.HitPos-Vector(0,0,20), ang, ent, EyeTrace.PhysicsBone or 0)
 			return vehicle
@@ -432,10 +434,11 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 					ply:ChatPrint(ent:Name()..' has disabled sitting!')
 					return
 				end
-				if ent:IsPlayer() and sitting_disallow_on_me then
+
+				--[[if ent:IsPlayer() and sitting_disallow_on_me then
 					ply:ChatPrint("You've disabled sitting on players!")
 					return
-				end
+				end]]
 			end
 			local vehicle = Sit(ply, EyeTrace.HitPos - Vector(0,0,20), ang, ent, EyeTrace.PhysicsBone or 0)
 
