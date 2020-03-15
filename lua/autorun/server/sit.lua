@@ -18,7 +18,6 @@ local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE})
 local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_ARCHIVE})
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE})
 local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE})
-local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_ARCHIVE})
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 
 
