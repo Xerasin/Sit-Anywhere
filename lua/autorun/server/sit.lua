@@ -18,6 +18,7 @@ local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE})
 local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_ARCHIVE})
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE})
 local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE})
+local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_ARCHIVE})
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 
 
@@ -25,14 +26,17 @@ local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
 
 
-local function ShouldAlwaysSit(ply)
-	return hook.Run("ShouldAlwaysSit",ply)
-end
-
 local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	ply:ExitVehicle()
 
 	local vehicle = ents.Create("prop_vehicle_prisoner_pod")
+	local t = hook.Run("OnPlayerSit", ply, pos, ang, parent or NULL, parentbone, vehicle)
+
+	if t == false then 
+		SafeRemoveEntity(vehicle)
+		return false 
+	end
+
 	vehicle:SetAngles(ang)
 	pos = pos + vehicle:GetUp()*18
 	vehicle:SetPos(pos)
@@ -119,7 +123,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		func(ply)
 	end
 
-	hook.Run("OnPlayerSit", ply, pos, ang, parent, parentbone, vehicle)
+	
 
 	return vehicle
 end
@@ -229,7 +233,7 @@ local model_blacklist = {  -- I need help finding out why these crash
 function ValidSitEntity(ply, EyeTrace)
 	if not EyeTrace.Hit then return false end
 	if EyeTrace.HitPos:Distance(EyeTrace.StartPos) > 100 then return false end
-	local t = hook.Run("AllowSit", ply, EyeTrace)
+	local t = hook.Run("CheckValidSit", ply, EyeTrace)
 
 	if t == false or t == true then 
 		return t 
@@ -367,6 +371,18 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 		end
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
 		
+		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() and not ms then
+			local t = hook.Run("OnGroundSit", ply, EyeTrace)
+			if t == false then 
+				return 
+			end
+
+			if not ply:GetNWBool("ground_sit") then
+				ply:ConCommand("ground_sit")
+				return
+			end
+		end
+		
 		if(ang_smallest_hori and distsang[infront].Hit and distsang[infront].Distance > 14 and smallest_hori <= 16) then
 			local hori = distsang[ang_smallest_hori].HorizontalTrace
 			ang.yaw = (hori.HitNormal:Angle().yaw - 90)
@@ -437,13 +453,29 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 
 end
 
+local function checkAllowSit(ply)
+	local allowSit = hook.Run("ShouldAllowSit", ply)
+
+	if allowSit == false or allowSit == true then 
+		return allowSit
+	end
+
+	if AdminOnly:GetBool() then
+		if not ply:IsAdmin() then 
+			return false
+		end
+	end
+
+	return true
+end
 
 local function sitcmd(ply)
 	if not IsValid(ply) then return end
 	if ply:InVehicle() then return end
-	if AdminOnly:GetBool() then
-		if not ply:IsAdmin() then return end
-	end
+
+	if not checkAllowSit(ply) then return end
+
+
 	local now=CurTime()
 
 	if NextUse[ply]>now then return end
@@ -550,46 +582,25 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 
 	local OnExit = function() UndoSitting(self, ply) end
 
-	if ShouldAlwaysSit(ply) then
-		-- Movie gamemode
-		if ply.UnStuck then
-			local pos = LocalToWorld(Vector(0,36,20),Angle(),self:GetPos(),Angle(0,self:GetAngles().yaw,0))
-			if ms then
-				timer.Simple(0, function()
-					ply:UnStuck()
-					ply:SetPos(oldpos)
-					OnExit()
-				end)
-			else
-				ply:UnStuck(pos, OnExit)
-			end
-			
-		else
+	local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
+	if ply.UnStuck then
+		if ms then
 			timer.Simple(0, function()
-				ply:SetPos(self:GetPos()+Vector(0,0,36))
+				ply:UnStuck()
+				ply:SetPos(oldpos)
 				OnExit()
 			end)
+		else
+			ply:UnStuck(oldpos, OnExit)
 		end
 	else
-		local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
-		if ply.UnStuck then
-			if ms then
-				timer.Simple(0, function()
-					ply:UnStuck()
-					ply:SetPos(oldpos)
-					OnExit()
-				end)
-			else
-				ply:UnStuck(oldpos, OnExit)
-			end
-		else
-			timer.Simple(0, function()
-				ply:SetPos(oldpos)
-				ply:SetEyeAngles(oldang)
-				OnExit()
-			end)
-		end
+		timer.Simple(0, function()
+			ply:SetPos(oldpos)
+			ply:SetEyeAngles(oldang)
+			OnExit()
+		end)
 	end
+
 end)
 
 
