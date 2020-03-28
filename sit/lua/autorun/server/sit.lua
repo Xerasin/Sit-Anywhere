@@ -19,6 +19,7 @@ local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_ARCHIVE})
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE})
 local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE})
 local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_ARCHIVE})
+local AllowSittingTightPlaces = CreateConVar("sitting_allow_tight_places","0",{FCVAR_ARCHIVE})
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0",{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 
 
@@ -44,6 +45,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle.playerdynseat=true
 	vehicle.oldpos = vehicle:WorldToLocal(ply:GetPos())
 	vehicle.oldang = vehicle:WorldToLocalAngles(ply:EyeAngles())
+	vehicle.wasCrouching = ply:Crouching()
 
 	vehicle:SetModel("models/nova/airboat_seat.mdl") -- DO NOT CHANGE OR CRASHES WILL HAPPEN
 
@@ -456,10 +458,18 @@ end
 local function checkAllowSit(ply)
 	local allowSit = hook.Run("ShouldAllowSit", ply)
 
+	
+	local bottom, top = ply:GetHull()
+	local diff = top.Z - bottom.Z
+	local trace = util.QuickTrace(ply:GetPos(), Vector(0, 0, diff), ply)
+
+	if not AllowSittingTightPlaces:GetBool() and trace.Hit then return false end
 	if allowSit == false or allowSit == true then 
 		return allowSit
 	end
 
+	--if ply:Crouching() then return false end
+	
 	if AdminOnly:GetBool() then
 		if not ply:IsAdmin() then 
 			return false
@@ -576,18 +586,25 @@ end)
 
 hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if not self.playerdynseat then return end
+
 	if CurTime()<NextUse[ply] then return false end
-
 	NextUse[ply] = CurTime() + 1
+end)
 
-	local OnExit = function() UndoSitting(self, ply) end
+hook.Add("PlayerLeaveVehicle","Remove_Seat",function(ply, self)
+	if not self.playerdynseat then return end
 
 	local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
+
+	local OnExit = function() 
+		UndoSitting(self, ply) 
+	end
+	
 	if ply.UnStuck then
 		if ms then
 			timer.Simple(0, function()
-				ply:UnStuck()
 				ply:SetPos(oldpos)
+				ply:UnStuck()
 				OnExit()
 			end)
 		else
@@ -600,7 +617,6 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 			OnExit()
 		end)
 	end
-
 end)
 
 
