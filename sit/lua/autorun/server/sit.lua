@@ -462,18 +462,21 @@ local function checkAllowSit(ply)
 	if allowSit == false or allowSit == true then 
 		return allowSit
 	end
-	
+
 	if AdminOnly:GetBool() then
-		if not ply:IsAdmin() then return end
+		if not ply:IsAdmin() then 
+			return false
+		end
 	end
 
+	return true
 end
 
 local function sitcmd(ply)
 	if not IsValid(ply) then return end
 	if ply:InVehicle() then return end
 
-	
+	if not checkAllowSit(ply) then return end
 
 
 	local now=CurTime()
