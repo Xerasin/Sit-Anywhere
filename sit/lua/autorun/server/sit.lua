@@ -29,11 +29,8 @@ local EMETA = FindMetaTable("Entity")
 local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	ply:ExitVehicle()
 
-
-	
-
 	local vehicle = ents.Create("prop_vehicle_prisoner_pod")
-	local t = hook.Run("OnPlayerSit", ply, pos, ang, parent, parentbone, vehicle)
+	local t = hook.Run("OnPlayerSit", ply, pos, ang, parent or NULL, parentbone, vehicle)
 
 	if t == false then 
 		SafeRemoveEntity(vehicle)
@@ -374,7 +371,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 		end
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
 		
-		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() then
+		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() and not ms then
 			local t = hook.Run("OnGroundSit", ply, EyeTrace)
 			if t == false then 
 				return 
