@@ -1,99 +1,142 @@
-local t = {start=nil,endpos=nil,mask=MASK_PLAYERSOLID,filter=nil}
-local function PlayerNotStuck(ply, pos)
-	t.start = pos
-	t.endpos = pos
-	t.filter = ply
-	return util.TraceEntity(t, ply).Hit == false
+
+do -- is stuck checker
+
+	local output = {}
+	local pl_filt
+	local filter_tbl  = {}
+	local function filter_func(e)
+		if e==pl_filt then return false end
+		local cg = e:GetCollisionGroup()
+
+		return
+			cg~=15 -- COLLISION_GROUP_PASSABLE_DOOR
+		and cg~=11 -- COLLISION_GROUP_WEAPON
+		and cg~=1 -- COLLISION_GROUP_DEBRIS
+		and cg~=2 -- COLLISION_GROUP_DEBRIS_TRIGGER
+		and cg~=20 -- COLLISION_GROUP_WORLD
+
+	end
+	local t = {output = output ,mask=MASK_PLAYERSOLID}
+	FindMetaTable"Player".IsStuck=function(pl,fast,pos)
+		t.start = pos or pl:GetPos()
+		t.endpos = t.start
+		if fast then
+			filter_tbl[1] = pl
+			t.filter = filter_tbl
+		else
+			pl_filt = pl
+			t.filter = filter_func
+		end
+
+
+		util.TraceEntity(t,pl)
+		return output.StartSolid,output.Entity,output
+	end
+
 end
 
-local meta= FindMetaTable("Player" )
-function meta:UnStuck(pos, callback)
-	if self.unstucking then return end
-	if not pos then pos = self:GetPos() end
-	if PlayerNotStuck( self, pos ) then
-		self:ExitVehicle()
-		if callback then callback() end
-		timer.Simple(0, function()
-			if self:IsValid() then
-				self:SetPos(pos)
-			end
-		end)
-	else
-		self.unstucking = true
 
-		local origin = self:GetPos()
-		local phi = math.rad(self:GetAngles().yaw)
-		local cosphi, sinphi = math.cos(phi), math.sin(phi)
+local ply = nil
 
-		--Spherical coordinates
-		local ranges = {
-			{38, 118, 20}, --rho
-			{0.14, 0.94, 0.2}, --theta
-			{0.14, 3.14, 0.5}, --phi
-		}
-		local state = {ranges[1][1], ranges[2][1], ranges[3][1]}
-		local hookname = "Unstucking"..self:EntIndex()
+local NewPos = nil
 
-		local function UnStuck(pos)
-			self.unstucking = nil
-			hook.Remove("Think", hookname)
-			self:ExitVehicle()
-			if callback then callback() end
-			if pos then
-				timer.Simple(0, function()
-					if self:IsValid() then
-						self:SetPos(pos)
-					end
-				end)
+local dirs={}
+
+local function FindPassableSpace(n, direction, step)
+	local origin = dirs[n]
+	if not origin then
+		origin=ply:GetPos()
+		dirs[n]=origin
+	end
+	
+	--for i=0,100 do
+		--origin = VectorMA( origin, step, direction )
+		origin:Add(step * direction)
+
+		if not ply:IsStuck(false,origin) then
+			ply:SetPos(origin)
+			if not ply:IsStuck(false) then
+				NewPos = ply:GetPos()
+				return true
 			end
 		end
 
-		hook.Add("Think", hookname, function()
-			if not self:IsValid() then hook.Remove("Think", hookname) return end
-			local i, k, j = state[1], state[2], state[3]
-			local sinj, cosj = math.sin(j), math.cos(j)
-			local sink, cosk = math.sin(k), math.cos(k)
+	--end
 
-			--Check 4 directions per frame
-			local v1 = Vector( i*sinj*cosk, i*sinj*sink, i*cosj )
-			local v2 = Vector( -v1.x, v1.y, v1.z )
-			local v3 = Vector( v1.x, v1.y, -v1.z )
-			local v4 = Vector( -v1.x, v1.y, -v1.z )
+	return false
+end
 
-			--Rotate by phi
-			local function rotate(v)
-				local x, y = cosphi*v.x - sinphi*v.y, cosphi*v.y + sinphi*v.x
-				v.x = x
-				v.y = y
-			end
-			rotate(v1) rotate(v2) rotate(v3) rotate(v4)
-
-			--Check if open
-			if PlayerNotStuck( self, origin + v1 ) then
-				UnStuck( origin + v1 )
-			elseif PlayerNotStuck( self, origin + v2 ) then
-				UnStuck( origin + v2 )
-			elseif PlayerNotStuck( self, origin + v3 ) then
-				UnStuck( origin + v3 )
-			elseif PlayerNotStuck( self, origin + v4 ) then
-				UnStuck( origin + v4 )
-			else
-				-- Increment state. This is a digit counter loop. Each state variable is considered a digit.
-				local stage = 3
-				while true do
-					state[stage] = state[stage] + ranges[stage][3]
-					if state[stage] > ranges[stage][2] then
-						state[stage] = ranges[stage][1]
-						stage = stage - 1
-						if stage == 0 then
-							UnStuck()
-							break
-						end
-					else
-						break
-					end
+--[[
+	Purpose: Unstucks player ,
+	Note: Very expensive to call, you have been warned!
+]]
+local forward = Vector(1,0,0)
+local right = Vector(0,1,0)
+local up = Vector(0,0,1)
+local function UnstuckPlayer(pl)
+	ply = pl
+	NewPos = ply:GetPos()
+	local OldPos = NewPos
+	dirs={}
+	if ply:IsStuck() then
+		local SearchScale = 1 -- Increase and it will unstuck you from even harder places but with lost accuracy. Please, don't try higher values than 12
+		local ok
+		local forward = ply:GetAimVector()
+		forward.z=0
+		forward:Normalize()
+		right=forward:Angle():Right()
+		for i=1,100 do
+			ok=true
+			
+			if (not FindPassableSpace(1,forward, SearchScale)) then
+				if (not FindPassableSpace(2,right, SearchScale)) then
+					if (not FindPassableSpace(3,right, -SearchScale)) then
+						if (not FindPassableSpace(4,up, SearchScale)) then
+							if (not FindPassableSpace(5,up, -SearchScale)) then
+								if (not FindPassableSpace(6,forward, -SearchScale)) then -- spam spam spam
+								--Msg( "Can't find the world for player "..tostring(ply).."\n" )
+									ok=false
+								end -- back
+							end -- down
+						end -- up
+					end -- left
 				end
 			end
-		end)
+			if ok then break end
+		end
+		
+		if not ok then return false end
+		
+	
+		if OldPos == NewPos then
+			print("Unstuck: Shouldnothappen")
+			-- Not stuck?
+			-- For some reason setting origin MAY apply some velocity so we're resetting it here.
+
+			return true
+		else
+			ply:SetPos(NewPos)
+
+			if SERVER and ply and ply:IsValid() and ply:GetPhysicsObject():IsValid() then
+				ply:SetVelocity(-ply:GetVelocity())
+			end
+
+			return true
+		end
 	end
+end
+
+util.UnstuckPlayer=UnstuckPlayer
+
+local Player = FindMetaTable"Player"
+
+function Player:UnStuck()
+	return UnstuckPlayer(self)
+end
+
+
+local Entity = FindMetaTable"Entity"
+
+Entity.UnStuck=Entity.UnStuck or function()
+	assert(false,"not implemented")
 end

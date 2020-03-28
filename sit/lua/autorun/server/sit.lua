@@ -601,18 +601,14 @@ hook.Add("PlayerLeaveVehicle","Remove_Seat",function(ply, self)
 	end
 	
 	if ply.UnStuck then
-		if ms then
-			timer.Simple(0, function()
-				ply:SetPos(oldpos)
-				ply:UnStuck()
-				OnExit()
-			end)
-		else
-			ply:UnStuck(oldpos, OnExit)
-		end
-	else
+		ply:SetPos(oldpos)
 		timer.Simple(0, function()
-			ply:SetPos(oldpos)
+			ply:UnStuck()
+			OnExit()
+		end)
+	else
+		ply:SetPos(oldpos)
+		timer.Simple(0, function()
 			ply:SetEyeAngles(oldang)
 			OnExit()
 		end)
