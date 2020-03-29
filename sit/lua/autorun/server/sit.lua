@@ -561,6 +561,7 @@ function CheckSeat(ply, ent, tbl)
 		end
 	end
 end
+
 local function CheckSeat2(ply, ent)
 	if not IsValid(ply:GetVehicle()) or not ply:GetVehicle().playerdynseat then return end
 	
@@ -588,7 +589,7 @@ end)
 
 hook.Add("PlayerSwitchWeapon", "VehicleFOVFix", function(ply, ent)
 	if IsValid(ply) and ply:InVehicle() then
-		ply:SetFOV(ply:GetFOV(),0)
+		ply:SetFOV(ply:GetFOV(), 0)
 	end
 end)
 
@@ -608,7 +609,7 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	local OnExit = function() 
 		UndoSitting(self, ply) 
 	end
-		
+
 	timer.Simple(0, function()
 		ply:SetPos(oldpos)
 		timer.Simple(0, function()
