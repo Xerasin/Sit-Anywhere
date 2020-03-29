@@ -117,9 +117,9 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	end
 
 	vehicle.removeonexit = true
-	vehicle.exit = exit
 	vehicle.sittingPly = ply
-		
+
+	ply.seatExit = exit	
 	ply:SetEyeAngles(Angle(0,90,0))
 	if func then
 		func(ply)
@@ -503,15 +503,23 @@ concommand.Add("sit",function(ply, cmd, args)
 end)
 
 local function UndoSitting(self, ply)
-	local prev = ply.sitting_allowswep
-	if prev~=nil then
-		ply.sitting_allowswep = nil
-		ply:SetAllowWeaponsInVehicle(prev)
+	if IsValid(ply) then
+		local prev = ply.sitting_allowswep
+
+		if prev~=nil then
+			ply.sitting_allowswep = nil
+			ply:SetAllowWeaponsInVehicle(prev)
+		end
+
+		if(ply.seatExit) then
+			ply.seatExit(ply)
+			ply.seatExit = nil
+		end
 	end
-	if(self.exit) then
-		self.exit(ply)
+	
+	if IsValid(self) then
+		SafeRemoveEntity(self)
 	end
-	self:Remove()
 end
 
 
@@ -584,37 +592,33 @@ hook.Add("PlayerSwitchWeapon", "VehicleFOVFix", function(ply, ent)
 	end
 end)
 
+local checked = {}
 hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
+	if not IsValid(self) or not IsValid(ply) then return end
 	if not self.playerdynseat then return end
+	if checked[self] then return end
+	checked[self] = true
+	
+	if CurTime() < NextUse[ply] then return false end
 
-	if CurTime()<NextUse[ply] then return false end
 	NextUse[ply] = CurTime() + 1
-end)
-
-hook.Add("PlayerLeaveVehicle","Remove_Seat",function(ply, self)
-	if not self.playerdynseat then return end
 
 	local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
 
 	local OnExit = function() 
 		UndoSitting(self, ply) 
 	end
-	
-	if ply.UnStuck then
+		
+	timer.Simple(0, function()
 		ply:SetPos(oldpos)
 		timer.Simple(0, function()
-			ply:UnStuck()
+			if ply.UnStuck then 
+				ply:UnStuck()
+			end
 			OnExit()
 		end)
-	else
-		ply:SetPos(oldpos)
-		timer.Simple(0, function()
-			ply:SetEyeAngles(oldang)
-			OnExit()
-		end)
-	end
+	end)
 end)
-
 
 hook.Add("AllowPlayerPickup","Nopickupwithalt",function(ply)
 	if(ply:KeyDown(IN_WALK)) then
