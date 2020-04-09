@@ -2,12 +2,6 @@
 local tag = "ground_sit"
 
 if SERVER then
-	concommand.Add(tag, function(ply)
-		if not ply.LastSit or ply.LastSit < CurTime() then
-			ply:SetNWBool(tag, not ply:GetNWBool(tag))
-			ply.LastSit = CurTime() + 1
-		end
-	end)
 	AddCSLuaFile()
 end
 

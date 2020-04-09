@@ -26,6 +26,12 @@ local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0",{FCVAR_NOTIFY
 local META = FindMetaTable("Player")
 local EMETA = FindMetaTable("Entity")
 
+concommand.Add("ground_sit", function(ply)
+	if AllowGroundSit:GetBool() and (not ply.LastSit or ply.LastSit < CurTime()) then
+		ply:SetNWBool("ground_sit", not ply:GetNWBool("ground_sit"))
+		ply.LastSit = CurTime() + 1
+	end
+end)
 
 local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	ply:ExitVehicle()
