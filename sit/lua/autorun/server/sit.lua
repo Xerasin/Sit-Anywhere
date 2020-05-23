@@ -529,7 +529,7 @@ concommand.Add("sit",function(ply, cmd, args)
 	sitcmd(ply)
 end)
 
-local function UndoSitting(self, ply)
+local function UndoSitting(ply)
 	if IsValid(ply) then
 		local prev = ply.sitting_allowswep
 
@@ -542,10 +542,6 @@ local function UndoSitting(self, ply)
 			ply.seatExit(ply)
 			ply.seatExit = nil
 		end
-	end
-	
-	if IsValid(self) then
-		SafeRemoveEntity(self)
 	end
 end
 
@@ -634,7 +630,12 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	local oldpos, oldang = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
 
 	local OnExit = function() 
-		UndoSitting(self, ply) 
+		UndoSitting(ply) 
+	end
+
+
+	if IsValid(self) then
+		SafeRemoveEntity(self)
 	end
 
 	timer.Simple(0, function()
