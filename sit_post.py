@@ -31,6 +31,4 @@ def run():
     
     repo.references.delete("refs/tags/workshop")
     repo.create_reference("refs/tags/workshop", currentCommitID)
-
-    repo.push()
 run()
