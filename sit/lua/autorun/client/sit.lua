@@ -1,9 +1,9 @@
 local useAlt = CreateClientConVar("sitting_use_alt",               "1.00", true, true)
-local groundSit = CreateClientConVar("sitting_ground_sit",         "1.00", true, true)
-local notOnMe = CreateClientConVar("sitting_disallow_on_me",       "0.00", true, true)
 local forceBinds = CreateClientConVar("sitting_force_binds",       "0", true, true)
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
-local activeTimer = {}
+
+CreateClientConVar("sitting_ground_sit",         "1.00", true, true)
+CreateClientConVar("sitting_disallow_on_me",       "0.00", true, true)
 
 local function ShouldSit(ply)
 	return hook.Run("ShouldSit", ply)
@@ -39,8 +39,6 @@ hook.Add("KeyPress","seats_use",function(ply,key)
 
 	if not good then return end
 	local trace = LocalPlayer():GetEyeTrace()
-	local ang = trace.HitNormal:Angle() + Angle(-270, 0, 0)
-
 
 	if trace.Hit then
 		RunConsoleCommand("sit")

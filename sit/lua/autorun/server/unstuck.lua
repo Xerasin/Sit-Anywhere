@@ -5,19 +5,19 @@ do -- is stuck checker
 	local pl_filt
 	local filter_tbl  = {}
 	local function filter_func(e)
-		if e==pl_filt then return false end
+		if e == pl_filt then return false end
 		local cg = e:GetCollisionGroup()
 
 		return
-			cg~=15 -- COLLISION_GROUP_PASSABLE_DOOR
-		and cg~=11 -- COLLISION_GROUP_WEAPON
-		and cg~=1 -- COLLISION_GROUP_DEBRIS
-		and cg~=2 -- COLLISION_GROUP_DEBRIS_TRIGGER
-		and cg~=20 -- COLLISION_GROUP_WORLD
+			cg ~= 15 -- COLLISION_GROUP_PASSABLE_DOOR
+		and cg ~= 11 -- COLLISION_GROUP_WEAPON
+		and cg ~= 1 -- COLLISION_GROUP_DEBRIS
+		and cg ~= 2 -- COLLISION_GROUP_DEBRIS_TRIGGER
+		and cg ~= 20 -- COLLISION_GROUP_WORLD
 
 	end
-	local t = {output = output ,mask=MASK_PLAYERSOLID}
-	FindMetaTable"Player".IsStuck=function(pl,fast,pos)
+	local t = {output = output ,mask = MASK_PLAYERSOLID}
+	FindMetaTable"Player".IsStuck = function(pl,fast,pos)
 		t.start = pos or pl:GetPos()
 		t.endpos = t.start
 		if fast then
@@ -40,15 +40,15 @@ local ply = nil
 
 local NewPos = nil
 
-local dirs={}
+local dirs = {}
 
 local function FindPassableSpace(n, direction, step)
 	local origin = dirs[n]
 	if not origin then
-		origin=ply:GetPos()
-		dirs[n]=origin
+		origin = ply:GetPos()
+		dirs[n] = origin
 	end
-	
+
 	--for i=0,100 do
 		--origin = VectorMA( origin, step, direction )
 		origin:Add(step * direction)
@@ -70,44 +70,38 @@ end
 	Purpose: Unstucks player ,
 	Note: Very expensive to call, you have been warned!
 ]]
-local forward = Vector(1,0,0)
+
+--local forward = Vector(1,0,0)
 local right = Vector(0,1,0)
 local up = Vector(0,0,1)
 local function UnstuckPlayer(pl)
 	ply = pl
 	NewPos = ply:GetPos()
 	local OldPos = NewPos
-	dirs={}
+
+	dirs = {}
 	if ply:IsStuck() then
 		local SearchScale = 1 -- Increase and it will unstuck you from even harder places but with lost accuracy. Please, don't try higher values than 12
 		local ok
 		local forward = ply:GetAimVector()
-		forward.z=0
+		forward.z = 0
 		forward:Normalize()
-		right=forward:Angle():Right()
-		for i=1,100 do
-			ok=true
-			
-			if (not FindPassableSpace(1,forward, SearchScale)) then
-				if (not FindPassableSpace(2,right, SearchScale)) then
-					if (not FindPassableSpace(3,right, -SearchScale)) then
-						if (not FindPassableSpace(4,up, SearchScale)) then
-							if (not FindPassableSpace(5,up, -SearchScale)) then
-								if (not FindPassableSpace(6,forward, -SearchScale)) then -- spam spam spam
-								--Msg( "Can't find the world for player "..tostring(ply).."\n" )
-									ok=false
-								end -- back
-							end -- down
-						end -- up
-					end -- left
-				end
+		right = forward:Angle():Right()
+		for i = 1,100 do
+			ok = true
+			if not FindPassableSpace(1, forward, SearchScale)
+				and not FindPassableSpace(2, right, SearchScale)
+				and not FindPassableSpace(3, right, -SearchScale)
+				and not FindPassableSpace(4, up, SearchScale)
+				and not FindPassableSpace(5, up, -SearchScale)
+				and not FindPassableSpace(6, forward, -SearchScale) then
+					ok = false
 			end
 			if ok then break end
 		end
-		
+
 		if not ok then return false end
-		
-	
+
 		if OldPos == NewPos then
 			print("Unstuck: Shouldnothappen")
 			-- Not stuck?
@@ -126,7 +120,7 @@ local function UnstuckPlayer(pl)
 	end
 end
 
-util.UnstuckPlayer=UnstuckPlayer
+util.UnstuckPlayer = UnstuckPlayer
 
 local Player = FindMetaTable"Player"
 
@@ -137,6 +131,6 @@ end
 
 local Entity = FindMetaTable"Entity"
 
-Entity.UnStuck=Entity.UnStuck or function()
+Entity.UnStuck = Entity.UnStuck or function()
 	assert(false,"not implemented")
 end
