@@ -9,17 +9,17 @@ def run():
     repo = pygit2.Repository(repository_path)
 
     commitId = ("{}").format(repo.head.target)
-    
-    lastUpdate = open("lastcommit.txt", "r")
-    diffUrl = ""
-    if lastUpdate:
-        fileData = lastUpdate.read()
-        if fileData == commitId:
-            print("No changes!")
-            return
-        diffUrl = ("https://github.com/Xerasin/Sit-Anywhere/compare/{}..{}").format(fileData, commitId)
+    currentCommit = repo[commitId]
+    currentWorkshop = repo.lookup_reference("refs/tags/workshop")
 
-    ahhh = repo[commitId]
+    lastWorkshop = commitId = ("{}").format(currentWorkshop.target)
+
+    diffUrl = ("https://github.com/Xerasin/Sit-Anywhere/compare/{}..{}").format(lastWorkshop, commitId)
+    if lastWorkshop == commitId:
+        print("No changes!")
+        return
+
+    
 
     out = check_output("\"D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin\\gmad.exe\" create -folder \".\\sit\" -out \".\\Sit.gma\"", shell=True)
 
@@ -31,9 +31,5 @@ def run():
     pprint(changelog)
 
     out = check_output(("\"D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(changelog), shell=True)
-    
-    lastUpdate = open("lastcommit.txt", "w")
-    lastUpdate.write(commitId)
-    lastUpdate.close()
-
+    repo.create_reference("refs/tags/workshop", commitId)
 run()
