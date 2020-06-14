@@ -2,6 +2,9 @@ import pygit2
 import os 
 from pprint import pprint
 from subprocess import check_output
+
+githubUrl = "https://github.com/Xerasin/Sit-Anywhere"
+
 def run():
     dir_path = os.path.dirname(os.path.realpath(__file__))  + "\\"
     repository_path = pygit2.discover_repository(dir_path)
@@ -12,14 +15,14 @@ def run():
     currentCommitID = ("{}").format(repo.head.target)
     workshopCommitID = ("{}").format(currentWorkshop.target)
 
-    diffUrl = ("https://github.com/Xerasin/Sit-Anywhere/compare/{}..{}").format(workshopCommitID, currentCommitID)
+    diffUrl = ("{}/compare/{}..{}").format(githubUrl, workshopCommitID, currentCommitID)
     if workshopCommitID == currentCommitID:
         print("No changes!")
         return
 
     out = check_output("\"D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin\\gmad.exe\" create -folder \".\\sit\" -out \".\\Sit.gma\"", shell=True)
 
-    changelog = ("""Update to [url=https://github.com/Xerasin/Sit-Anywhere/commit/{0}]{0}[/url]""").format(currentCommitID)
+    changelog = ("""Update to [url={0}/commit/{1}]{1}[/url]""").format(githubUrl, currentCommitID)
 
     if diffUrl != "":
         changelog = ("{} [url={}]Diff[/url]").format(changelog, diffUrl)
@@ -28,7 +31,7 @@ def run():
     while True:
         query = input('Push to Workshop? ')
         response = query[0].lower()
-        if query == '' or not Fl in ['y','n']:
+        if query == '' or not response in ['y','n']:
             print('Please answer with yes or no!')
         else:
             break
