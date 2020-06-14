@@ -390,7 +390,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 			trace.ang = I
 
 			if((not trace.Hit or trace.Distance > 14) and (not trace.HorizontalTrace.Hit or trace.Distance2 > 20)) then
-				table.insert(dists,trace)
+				table.insert(dists, trace)
 
 			end
 			if(trace.Distance2 < smallest_hori and (not trace.HorizontalTrace.Hit or trace.Distance2 > 3)) then
@@ -401,7 +401,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit)
 		end
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
 		
-		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() and not ms then
+		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() then
 			local t = hook.Run("OnGroundSit", ply, EyeTrace)
 			if t == false then 
 				return 
