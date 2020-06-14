@@ -1,4 +1,3 @@
-AddCSLuaFile("lua/autorun/client/sit.lua")
 if CLIENT then return end
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({},{__mode = 'k', __index = function() return 0 end})

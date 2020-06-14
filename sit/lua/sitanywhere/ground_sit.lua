@@ -1,10 +1,6 @@
 
 local tag = "ground_sit"
 
-if SERVER then
-	AddCSLuaFile()
-end
-
 local sitting = 0
 
 

@@ -40,3 +40,4 @@ luac.out
 *.hex
 
 *.gma
+pygit_logger.log
