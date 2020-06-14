@@ -28,17 +28,9 @@ def run():
         changelog = ("{} [url={}]Diff[/url]").format(changelog, diffUrl)
     pprint(changelog)
 
-    while True:
-        query = input('Push to Workshop? ')
-        response = query[0].lower()
-        if query == '' or not response in ['y','n']:
-            print('Please answer with yes or no!')
-        else:
-            break
-    
-    if response == 'y':
-        out = check_output(("\"D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(changelog), shell=True)
-    
+    #out = check_output(("\"D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(changelog), shell=True)
+    pprint(out)
+
     repo.references.delete("refs/tags/workshop")
     repo.create_reference("refs/tags/workshop", currentCommitID)
 run()
