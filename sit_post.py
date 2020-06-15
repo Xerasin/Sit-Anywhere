@@ -22,7 +22,7 @@ def run():
 
     out = check_output(("\"{}\\gmad.exe\" create -folder \".\\sit\" -out \".\\Sit.gma\"").format(gmodUtilDir), shell=True)
 
-    diffUrl = ("{}/compare/{}..{}").format(githubUrl, workshopCommitID, currentCommitID)
+    diffUrl = ("{}/compare/{}...{}").format(githubUrl, workshopCommitID, currentCommitID)
 
     changelog = ("""Update to [url={0}/commit/{1}]{1}[/url] - [url={2}]Changes[/url]""").format(githubUrl, currentCommitID, diffUrl)
 
