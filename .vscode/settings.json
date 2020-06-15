@@ -1,0 +1,9 @@
+{
+    "files.exclude": {
+        ".gitignore": true,
+        ".vscode": true,
+        "**/*.gma": true,
+        "**/addon.json": true,
+        "README.md": true
+    }
+}
