@@ -24,8 +24,7 @@ def run():
 
     diffUrl = ("{}/compare/{}..{}").format(githubUrl, workshopCommitID, currentCommitID)
 
-    changelog = ("""Update to [url={0}/commit/{1}]{1}[/url] 
-    [url={2}]Differences[/url] """).format(githubUrl, currentCommitID, diffUrl)
+    changelog = ("""Update to [url={0}/commit/{1}]{1}[/url] - [url={2}]Changes[/url]""").format(githubUrl, currentCommitID, diffUrl)
 
     pprint(changelog)
     out = check_output(("\"{}\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(gmodUtilDir, changelog), shell=True)
