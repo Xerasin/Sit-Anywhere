@@ -3,19 +3,20 @@ import os
 from pprint import pprint
 from subprocess import check_output
 
-githubUrl = "https://github.com/Xerasin/Sit-Anywhere"
 gmodUtilDir = "D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin"
+
+dir_path = os.path.dirname(os.path.realpath(__file__))  + "\\"
+repository_path = pygit2.discover_repository(dir_path)
 def run():
-    dir_path = os.path.dirname(os.path.realpath(__file__))  + "\\"
-    repository_path = pygit2.discover_repository(dir_path)
     repo = pygit2.Repository(repository_path)
+    githubUrl = repo.config["remote.origin.url"].replace(".git", "")
 
     currentWorkshop = repo.lookup_reference("refs/tags/workshop")
 
     currentCommitID = ("{}").format(repo.head.target)
     workshopCommitID = ("{}").format(currentWorkshop.target)
 
-    
+
     if workshopCommitID == currentCommitID:
         print("No changes!")
         return
