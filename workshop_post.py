@@ -7,15 +7,26 @@ gmodUtilDir = "D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin
 
 dir_path = os.path.dirname(os.path.realpath(__file__))  + "\\"
 repository_path = pygit2.discover_repository(dir_path)
+
+def ask(string):
+    while True:
+     query = input(string)
+     charOutput = query[0].lower()
+     if query == '' or not Fl in ['y', 'n']:
+        print('Please answer with yes or no!')
+     else:
+        break
+    if charOutput == 'y':
+        return True
+    return False
+
 def run():
     repo = pygit2.Repository(repository_path)
     githubUrl = repo.config["remote.origin.url"].replace(".git", "")
-
-    currentWorkshop = repo.lookup_reference("refs/tags/workshop")
+    workshopCommit = repo.lookup_reference("refs/tags/workshop")
 
     currentCommitID = ("{}").format(repo.head.target)
-    workshopCommitID = ("{}").format(currentWorkshop.target)
-
+    workshopCommitID = ("{}").format(workshopCommit.target)
 
     if workshopCommitID == currentCommitID:
         print("No changes!")
@@ -24,12 +35,16 @@ def run():
     out = check_output(("\"{}\\gmad.exe\" create -folder \".\\sit\" -out \".\\Sit.gma\"").format(gmodUtilDir), shell=True)
 
     diffUrl = ("{}/compare/{}...{}").format(githubUrl, workshopCommitID, currentCommitID)
-
     changelog = ("""Update to [url={0}/commit/{1}]{1}[/url] - [url={2}]Changes[/url]""").format(githubUrl, currentCommitID, diffUrl)
+    print(changelog)
 
-    pprint(changelog)
-    out = check_output(("\"{}\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(gmodUtilDir, changelog), shell=True)
+    if ask("Do you want to push this to the workshop? "):
+        out = check_output(("\"{}\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(gmodUtilDir, changelog), shell=True)
+        repo.references.delete("refs/tags/workshop")
+        repo.create_reference("refs/tags/workshop", currentCommitID)
+    else:
+        if ask("Do you want to update the workshop refrence?"):
+            repo.references.delete("refs/tags/workshop")
+            repo.create_reference("refs/tags/workshop", currentCommitID)
 
-    repo.references.delete("refs/tags/workshop")
-    repo.create_reference("refs/tags/workshop", currentCommitID)
 run()
