@@ -12,7 +12,7 @@ def ask(string):
     while True:
      query = input(string)
      charOutput = query[0].lower()
-     if query == '' or not Fl in ['y', 'n']:
+     if query == '' or not charOutput in ['y', 'n']:
         print('Please answer with yes or no!')
      else:
         break
@@ -38,13 +38,16 @@ def run():
     changelog = ("""Update to [url={0}/commit/{1}]{1}[/url] - [url={2}]Changes[/url]""").format(githubUrl, currentCommitID, diffUrl)
     print(changelog)
 
-    if ask("Do you want to push this to the workshop? "):
-        out = check_output(("\"{}\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(gmodUtilDir, changelog), shell=True)
+    def update_ref():
         repo.references.delete("refs/tags/workshop")
         repo.create_reference("refs/tags/workshop", currentCommitID)
+
+    if ask("Do you want to push this to the workshop? "):
+        out = check_output(("\"{}\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(gmodUtilDir, changelog), shell=True)
+        update_ref()
     else:
-        if ask("Do you want to update the workshop refrence?"):
-            repo.references.delete("refs/tags/workshop")
-            repo.create_reference("refs/tags/workshop", currentCommitID)
+        if ask("Do you want to update the workshop refrence? "):
+            update_ref()
+            
 
 run()
