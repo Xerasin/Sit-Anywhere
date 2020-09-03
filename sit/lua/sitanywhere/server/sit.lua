@@ -122,12 +122,12 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 
 	vehicle.removeonexit = true
 	vehicle.sittingPly = ply
-
-	ply.seatExit = exit
-	ply:SetEyeAngles(Angle(0,90,0))
 	if func then
 		func(ply)
 	end
+
+	ply.seatExit = exit
+	ply:SetEyeAngles(Angle(0,90,0))
 
 	return vehicle
 end
@@ -606,13 +606,13 @@ local checked = {}
 hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if not IsValid(self) or not IsValid(ply) then return end
 	if not self.playerdynseat then return end
-	if checked[self] then return end
-	checked[self] = true
 
 	if CurTime() < NextUse[ply] then return false end
 
 	NextUse[ply] = CurTime() + 1
 
+	if checked[self] then return end
+	checked[self] = true
 	local oldpos = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
 
 	local OnExit = function()
@@ -623,10 +623,9 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if IsValid(self) then
 		SafeRemoveEntity(self)
 	end
-
-	timer.Simple(0, function()
+	timer.Create("SitThe", 0, 1, function()
 		ply:SetPos(oldpos)
-		timer.Simple(0, function()
+		timer.Create("FDown", 1, 1, function()
 			if ply.UnStuck then
 				ply:UnStuck()
 			end
