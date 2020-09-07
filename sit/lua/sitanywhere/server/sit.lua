@@ -623,9 +623,10 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if IsValid(self) then
 		SafeRemoveEntity(self)
 	end
-	timer.Create("SitThe", 0, 1, function()
+
+	timer.Create("SitThe_" .. ply:EntIndex(), 0, 1, function()
 		ply:SetPos(oldpos)
-		timer.Create("FDown", 1, 1, function()
+		timer.Create("FDown_" .. ply:EntIndex(), 1, 1, function()
 			if ply.UnStuck then
 				ply:UnStuck()
 			end
