@@ -668,7 +668,7 @@ end)
 
 hook.Add("EntityRemoved","Sitting_EntityRemoved",function(ent)
 	if FixLegBug:GetBool() and ent.playerdynseat and IsValid(ent.sittingPly) then
-		UndoSitting(ent, ent.sittingPly)
+		UndoSitting(ent.sittingPly)
 	end
 
 	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do
