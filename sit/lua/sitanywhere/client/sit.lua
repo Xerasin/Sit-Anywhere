@@ -82,7 +82,8 @@ local function DoSit(trace)
 		return
 	end
 
-	if trace.HitPos:Distance(trace.StartPos) > 100 then
+	local valid = SitAnywhere.ValidSitTrace(LocalPlayer(), trace)
+	if not valid then
 		return
 	end
 	StartSit()
