@@ -52,3 +52,28 @@ hook.Add("CalcMainActivity", tag, function(ply, vel)
 		return
 	end
 end)
+
+
+if SERVER then
+	local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_ARCHIVE})
+	hook.Add("HandleSit","GroundSit", function(ply, dists, EyeTrace)
+		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() and ply:EyeAngles().p > 80 then
+			local t = hook.Run("OnGroundSit", ply, EyeTrace)
+			if t == false then
+				return
+			end
+
+			if not ply:GetNWBool("ground_sit") then
+				ply:ConCommand("ground_sit")
+				return true
+			end
+		end
+	end)
+
+	concommand.Add("ground_sit", function(ply)
+		if AllowGroundSit:GetBool() and (not ply.LastSit or ply.LastSit < CurTime()) then
+			ply:SetNWBool("ground_sit", not ply:GetNWBool("ground_sit"))
+			ply.LastSit = CurTime() + 1
+		end
+	end)
+end

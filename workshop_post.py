@@ -32,7 +32,7 @@ def run():
         print("No changes!")
         return
 
-    out = check_output(("\"{}\\gmad.exe\" create -folder \".\\sit\" -out \".\\Sit.gma\"").format(gmodUtilDir), shell=True)
+    check_output(("\"{}\\gmad.exe\" create -folder \".\\sit\" -out \".\\Sit.gma\"").format(gmodUtilDir), shell=True)
 
     diffUrl = ("{}/compare/{}...{}").format(githubUrl, workshopCommitID, currentCommitID)
     changelog = ("""Update to [url={0}/commit/{1}]{1}[/url] - [url={2}]Changes[/url]""").format(githubUrl, currentCommitID, diffUrl)
@@ -43,7 +43,7 @@ def run():
         repo.create_reference("refs/tags/workshop", currentCommitID)
 
     if ask("Do you want to push this to the workshop? "):
-        out = check_output(("\"{}\\gmpublish.exe\" update -addon \".\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(gmodUtilDir, changelog), shell=True)
+        check_output(("\"{}\\gmpublish.exe\" update -addon \".\\Sit.gma\"  -id \"108176967\" -changes \"{}\"").format(gmodUtilDir, changelog), shell=True)
         update_ref()
     else:
         if ask("Do you want to update the workshop refrence? "):
