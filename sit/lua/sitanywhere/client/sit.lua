@@ -10,66 +10,83 @@ local function ShouldSit(ply)
 end
 
 local arrow = Material("widgets/arrow.png")
-local function DoSit(trace)
-	local function StartSit()
-		local wantedAng
-		local start = CurTime()
-		local ply = LocalPlayer()
-		hook.Add("KeyRelease", "seats_use", function(_, key)
-			if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
-			if key ~= IN_USE then return end
 
-			hook.Remove("KeyRelease", "seats_use")
-			hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
 
-			if CurTime() - start < 0.25 then
-				RunConsoleCommand("sit")
-			elseif wantedAng then
-				net.Start("SitAnywhere")
-					net.WriteInt(SitAnywhere.NET.SitWantedAng, 4)
-					net.WriteFloat(wantedAng.y)
-					net.WriteVector(trace.StartPos)
-					net.WriteVector(trace.Normal)
-				net.SendToServer()
-			end
-		end)
+local function StartSit(trace)
+	local wantedAng = nil
+	local start = CurTime()
+	local ply = LocalPlayer()
 
-		hook.Add("PostDrawOpaqueRenderables", "SitAnywhere", function(depth, skybox)
-			if CurTime() - start <= 0.25 then return end
-			if trace.StartPos:Distance(ply:EyePos()) > 10 then
-				hook.Remove("KeyRelease", "seats_use")
-				hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
-				return
-			end
-
-			local traceDist, drawScale = 20, 0.1
-			local vec = util.IntersectRayWithPlane(ply:EyePos(), ply:EyeAngles():Forward(), trace.HitPos, Vector(0, 0, 1))
-			if not vec then
-				return
-			end
-
-			local posOnPlane = WorldToLocal(vec, Angle(0, 90, 0), trace.HitPos, Angle(0, 0, 0))
-			local testVec = (posOnPlane):GetNormal() * traceDist / drawScale
-			local currentAng = (trace.HitPos - vec):Angle()
-			wantedAng = currentAng
-
-			if posOnPlane:Length() < 2 then
-				wantedAng = nil
-				return
-			end
-
-			if wantedAng then
-				local goodSit = SitAnywhere.CheckValidAngForSit(trace.HitPos, trace.HitNormal:Angle(), wantedAng.y)
-				if not goodSit then wantedAng = nil end
-				cam.Start3D2D(trace.HitPos + Vector(0, 0, 1), Angle(0, 0, 0), 0.1)
-					surface.SetDrawColor(goodSit and Color(255, 255, 255, 255) or Color(255, 0, 0, 255))
-					surface.SetMaterial(arrow)
-					surface.DrawTexturedRectRotated(testVec.x * 0.5, testVec.y * -0.5, 2 / drawScale, traceDist / drawScale, currentAng.y + 90)
-				cam.End3D2D()
-			end
-		end)
+	local function EndSit()
+		net.Start("SitAnywhere")
+			net.WriteInt(SitAnywhere.NET.SitWantedAng, 4)
+			net.WriteFloat(wantedAng.y)
+			net.WriteVector(trace.StartPos)
+			net.WriteVector(trace.Normal)
+		net.SendToServer()
 	end
 
+	hook.Add("KeyRelease", "seats_use", function(_, key)
+		if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
+		if key ~= IN_USE then return end
+		hook.Remove("KeyRelease", "seats_use")
+		hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
+
+		if CurTime() - start < 0.25 then
+			RunConsoleCommand("sit")
+			return
+		end
+
+		if wantedAng then
+			EndSit()
+		end
+	end)
+
+	hook.Add("PostDrawOpaqueRenderables", "SitAnywhere", function(depth, skybox)
+		if CurTime() - start <= 0.25 then return end
+		if trace.StartPos:Distance(ply:EyePos()) > 10 then
+			hook.Remove("KeyRelease", "seats_use")
+			hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
+			return
+		end
+
+		local traceDist, drawScale = 20, 0.1
+		local vec = util.IntersectRayWithPlane(ply:EyePos(), ply:EyeAngles():Forward(), trace.HitPos, Vector(0, 0, 1))
+		if not vec then
+			return
+		end
+
+		local posOnPlane = WorldToLocal(vec, Angle(0, 90, 0), trace.HitPos, Angle(0, 0, 0))
+		local testVec = (posOnPlane):GetNormal() * traceDist / drawScale
+		local currentAng = (trace.HitPos - vec):Angle()
+		wantedAng = currentAng
+
+		if posOnPlane:Length() < 2 then
+			wantedAng = nil
+			return
+		end
+
+		if wantedAng then
+			local goodSit = SitAnywhere.CheckValidAngForSit(trace.HitPos, trace.HitNormal:Angle(), wantedAng.y)
+			if not goodSit then wantedAng = nil end
+			cam.Start3D2D(trace.HitPos + Vector(0, 0, 1), Angle(0, 0, 0), 0.1)
+				surface.SetDrawColor(goodSit and Color(255, 255, 255, 255) or Color(255, 0, 0, 255))
+				surface.SetMaterial(arrow)
+				surface.DrawTexturedRectRotated(testVec.x * 0.5, testVec.y * -0.5, 2 / drawScale, traceDist / drawScale, currentAng.y + 90)
+			cam.End3D2D()
+		end
+	end)
+
+	return function()
+		hook.Remove("KeyRelease", "seats_use")
+		hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
+		if wantedAng then
+			EndSit()
+		end
+	end
+end
+
+local function DoSit(trace)
 	if not trace.Hit then return end
 
 	local surfaceAng = trace.HitNormal:Angle() + Angle(-270, 0, 0)
@@ -86,8 +103,22 @@ local function DoSit(trace)
 	if not valid then
 		return
 	end
-	StartSit()
+
+	return StartSit(trace)
 end
+
+local currSit
+concommand.Add("+sit", function(ply, cmd, args)
+	if currSit then return end
+	currSit = DoSit(ply:GetEyeTrace())
+end)
+
+concommand.Add("-sit", function(ply, cmd, args)
+	if currSit then
+		currSit()
+		currSit = nil
+	end
+end)
 
 
 hook.Add("KeyPress","seats_use",function(ply, key)
