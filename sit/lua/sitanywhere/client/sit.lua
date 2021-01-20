@@ -81,6 +81,12 @@ local function StartSit(trace)
 	return function()
 		hook.Remove("KeyRelease", "seats_use")
 		hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
+
+		if CurTime() - start < 0.25 then
+			RunConsoleCommand("sit")
+			return
+		end
+
 		if wantedAng then
 			EndSit()
 		end
