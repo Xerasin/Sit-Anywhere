@@ -1,6 +1,7 @@
 local useAlt = CreateClientConVar("sitting_use_alt",               "1.00", true, true)
 local forceBinds = CreateClientConVar("sitting_force_binds",       "0", true, true)
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
+local pickAngle = CreateClientConVar("sitting_pick_angle",       "0", true, true)
 
 CreateClientConVar("sitting_ground_sit",         "1.00", true, true)
 CreateClientConVar("sitting_disallow_on_me",       "0.00", true, true)
@@ -115,7 +116,11 @@ hook.Add("KeyPress","seats_use",function(ply, key)
 	local trace = LocalPlayer():GetEyeTrace()
 
 	if trace.Hit then
-		DoSit(trace)
+		if pickAngle:GetBool() then
+			DoSit(trace)
+		else
+			RunConsoleCommand("sit")
+		end
 	end
 end)
 
