@@ -234,6 +234,20 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 	local valid, ent = SitAnywhere.ValidSitTrace(ply, EyeTrace)
 	if ent then return ent end
 	if not valid then return end
+	local surfaceAng = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
+	ang = surfaceAng
+
+	if wantedAng and math.abs(surfaceAng.pitch) <= 15 then
+		ent = EyeTrace.Entity
+		if wantedAng and (EyeTrace.HitWorld or not ent:IsPlayer()) then
+			if SitAnywhere.CheckValidAngForSit(EyeTrace.HitPos, EyeTrace.HitNormal:Angle(), wantedAng) then
+				ang.yaw = wantedAng + 90
+			else
+				return
+			end
+		end
+		return Sit(ply, EyeTrace.HitPos - Vector(0, 0, 23), ang, ent, EyeTrace.PhysicsBone or 0)
+	end
 
 	if SittingOnPlayer:GetBool() then -- Sitting on SITTING Players
 
@@ -321,23 +335,9 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		return vehicle
 	end
 
-	ang = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
 
-	if math.abs(ang.pitch) <= 15 then
+	if math.abs(surfaceAng.pitch) <= 15 then
 		ang = Angle()
-
-		if wantedAng then
-			ent = EyeTrace.Entity
-			if wantedAng and (EyeTrace.HitWorld or not ent:IsPlayer()) then
-				if SitAnywhere.CheckValidAngForSit(EyeTrace.HitPos, EyeTrace.HitNormal:Angle(), wantedAng) then
-					ang.yaw = wantedAng + 90
-				else
-					return
-				end
-			end
-			return Sit(ply, EyeTrace.HitPos - Vector(0, 0, 23), ang, ent, EyeTrace.PhysicsBone or 0)
-		end
-
 		local dists, distsang, ang_smallest_hori, smallest_hori = SitAnywhere.GetAreaProfile(EyeTrace.HitPos, 24, false)
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
 
