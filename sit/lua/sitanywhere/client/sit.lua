@@ -44,6 +44,10 @@ local function DoSit(trace)
 
 			local traceDist, drawScale = 20, 0.1
 			local vec = util.IntersectRayWithPlane(ply:EyePos(), ply:EyeAngles():Forward(), trace.HitPos, Vector(0, 0, 1))
+			if not vec then
+				return
+			end
+
 			local posOnPlane = WorldToLocal(vec, Angle(0, 90, 0), trace.HitPos, Angle(0, 0, 0))
 			local testVec = (posOnPlane):GetNormal() * traceDist / drawScale
 			local currentAng = (trace.HitPos - vec):Angle()
