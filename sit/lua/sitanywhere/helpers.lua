@@ -39,6 +39,8 @@ function SitAnywhere.GetAreaProfile(pos, resolution, simple)
         end
         distsang[I] = trace
     end
+
+    if simple then return false end
     return dists, distsang, ang_smallest_hori, smallest_hori
 end
 
