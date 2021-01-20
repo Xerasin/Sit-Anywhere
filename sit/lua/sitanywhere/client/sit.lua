@@ -24,6 +24,7 @@ local function StartSit(trace)
 			net.WriteVector(trace.StartPos)
 			net.WriteVector(trace.Normal)
 		net.SendToServer()
+		wantedAng = nil
 	end
 
 	hook.Add("KeyRelease", "seats_use", function(_, key)
