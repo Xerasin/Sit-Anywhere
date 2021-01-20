@@ -3,9 +3,15 @@ SitAnywhere.NET = {
     ["SitWantedAng"] = 0,
 }
 
+SitAnywhere.ClassBlacklist = {
+    ["gmod_wire_keyboard"] = true,
+    ["prop_combine_ball"] = true
+}
+SitAnywhere.ModelBlacklist = {
+}
 
 local EMETA = FindMetaTable"Entity"
-local PMETA = FindMetaTable"Player"
+--local PMETA = FindMetaTable"Player"
 
 function SitAnywhere.GetAreaProfile(pos, resolution, simple)
     local filter = player.GetAll()
@@ -55,6 +61,16 @@ function SitAnywhere.CheckValidAngForSit(pos, surfaceAng, ang)
 end
 
 
+local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
+--[[
+	0 - Can't sit on any ents
+	1 - Can't sit on any player ents
+	2 - Can only sit on your own ents
+	3 - Any
+]]
+
+local blacklist = SitAnywhere.ClassBlacklist
+local model_blacklist = SitAnywhere.ModelBlacklist
 function SitAnywhere.ValidSitTrace(ply, EyeTrace)
     if not EyeTrace.Hit then return false end
     if EyeTrace.HitPos:Distance(EyeTrace.StartPos) > 100 then return false end
@@ -67,6 +83,8 @@ function SitAnywhere.ValidSitTrace(ply, EyeTrace)
     if not EyeTrace.HitWorld and SitOnEntsMode:GetInt() == 0 then return false end
     if not EyeTrace.HitWorld and blacklist[string.lower(EyeTrace.Entity:GetClass())] then return false end
     if not EyeTrace.HitWorld and EyeTrace.Entity:GetModel() and model_blacklist[string.lower(EyeTrace.Entity:GetModel())] then return false end
+
+
     if EMETA.CPPIGetOwner and SitOnEntsMode:GetInt() >= 1 then
         if SitOnEntsMode:GetInt() == 1 then
             if not EyeTrace.HitWorld then

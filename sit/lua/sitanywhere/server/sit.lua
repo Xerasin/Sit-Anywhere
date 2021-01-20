@@ -2,13 +2,6 @@ if CLIENT then return end
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({},{__mode = 'k', __index = function() return 0 end})
 
-local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_ARCHIVE})
---[[
-	0 - Can't sit on any ents
-	1 - Can't sit on any player ents
-	2 - Can only sit on your own ents
-	3 - Any
-]]
 local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_ARCHIVE})
 local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_ARCHIVE})
 local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_ARCHIVE})
@@ -18,11 +11,9 @@ local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_ARCHIVE})
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE})
 local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE})
 local AllowSittingTightPlaces = CreateConVar("sitting_allow_tight_places","0",{FCVAR_ARCHIVE})
-
+CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 
 local META = FindMetaTable("Player")
-local EMETA = FindMetaTable("Entity")
-
 
 util.AddNetworkString("SitAnywhere")
 
@@ -231,21 +222,7 @@ local function FindPose(this,me)
 end
 
 
-local blacklist = { ["gmod_wire_keyboard"] = true, ["prop_combine_ball"] = true}
-local model_blacklist = {  -- I need help finding out why these crash
-	--[[["models/props_junk/sawblade001a.mdl"] = true,
-	["models/props_c17/furnitureshelf001b.mdl"] = true,
-	["models/props_phx/construct/metal_plate1.mdl"] = true,
-	["models/props_phx/construct/metal_plate1x2.mdl"] = true,
-	["models/props_phx/construct/metal_plate1x2_tri.mdl"] = true,
-	["models/props_phx/construct/metal_plate1_tri.mdl"] = true,
-	["models/props_phx/construct/metal_plate2x2.mdl"] = true,
-	["models/props_phx/construct/metal_plate2x2_tri.mdl"] = true,
-	["models/props_phx/construct/metal_plate2x4.mdl"] = true,
-	["models/props_phx/construct/metal_plate2x4_tri.mdl"] = true,
-	["models/props_phx/construct/metal_plate4x4.mdl"] = true,
-	["models/props_phx/construct/metal_plate4x4_tri.mdl"] = true,]]
-}
+
 
 function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 	if EyeTrace == nil then
