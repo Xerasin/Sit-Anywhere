@@ -67,12 +67,14 @@ local function DoSit(trace)
 		end)
 	end
 
-	ang = trace.HitNormal:Angle() + Angle(-270, 0, 0)
+	if not trace.Hit then return end
+
+	local surfaceAng = trace.HitNormal:Angle() + Angle(-270, 0, 0)
 
 	local playerTrace = not trace.HitWorld and IsValid(trace.Entity) and trace.Entity:IsPlayer()
 
 	local goodSit = SitAnywhere.GetAreaProfile(trace.HitPos, 24, true)
-	if math.abs(ang.pitch) >= 15 or not goodSit or playerTrace then
+	if math.abs(surfaceAng.pitch) >= 15 or not goodSit or playerTrace then
 		RunConsoleCommand"sit"
 		return
 	end
