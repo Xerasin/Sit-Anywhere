@@ -128,7 +128,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	else
 		vehicle.OnWorld = true
 	end
-	
+
 	local prev = ply:GetAllowWeaponsInVehicle()
 	if prev then
 		ply.sitting_allowswep = nil
@@ -374,7 +374,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		do
 			local bone = ent:LookupBone("ValveBiped.Bip01_Neck1")
 			if bone then
-				seatPos = ent:GetBonePosition(bone) - Vector(0, 0, 14)
+				seatPos = ent:GetBonePosition(bone) - Vector(0, 0, 9)
 			end
 		end
 

@@ -1,4 +1,4 @@
-easylua.StartEntity("sit_holder")
+--easylua.StartEntity("sit_holder")
 ENT.Type = "anim"
 ENT.PrintName = "Sit Holder"
 ENT.Model = "models/sprops/rectangles_superthin/size_2_5/rect_18x18.mdl"
@@ -58,16 +58,18 @@ function ENT:Think()
         if SERVER and (not IsValid(self:GetSeat()) or not IsValid(self:GetTargetPlayer())) then
             SafeRemoveEntity(self)
         end
+        local seat = self:GetSeat()
+        if CLIENT and IsValid(seat) and self:GetActivated() and not seat.RenderOverride then
+            local holder = self
+            seat.RenderOverride = function(sSeat)
+                if not IsValid(holder) then sSeat:Draw() return end
+                local ent = self:GetTargetPlayer()
+                if not IsValid(ent) then sSeat:Draw() return end
 
-        local ent, seat = self:GetTargetPlayer(), self:GetSeat()
-        if self:GetActivated() and IsValid(ent) and IsValid(seat) then
-            local tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent:GetPos(), ent:GetRenderAngles())
-            --self:SetPos(tPos)
-            --self:SetAngles(tAng)
-
-            if CLIENT then
-                seat:SetRenderOrigin(tPos)
-                seat:SetRenderAngles(tAng)
+                local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), ent:GetRenderOrigin(), ent:GetRenderAngles())
+                sSeat:SetRenderOrigin(tPos)
+                sSeat:SetRenderAngles(tAng)
+                sSeat:Draw()
             end
         end
     end
