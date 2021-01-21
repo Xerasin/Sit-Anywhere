@@ -36,6 +36,19 @@ end)
 
 local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	ply:ExitVehicle()
+	local function getHolders(pl)
+		local holders = {}
+		for _, v in pairs(ents.FindByClass("sit_holder")) do
+			if v.GetTargetPlayer and v:GetTargetPlayer() == pl then
+				table.insert(holders, v)
+			end
+		end
+		return holders
+	end
+
+	for _, holder in next, getHolders(ply) do
+		SafeRemoveEntityDelayed(holder, 0.1)
+	end
 
 	local vehicle = ents.Create("prop_vehicle_prisoner_pod")
 	local t = hook.Run("OnPlayerSit", ply, pos, ang, parent or NULL, parentbone, vehicle)
@@ -65,6 +78,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		SafeRemoveEntity(vehicle)
 		return false
 	end
+
 
 	local phys = vehicle:GetPhysicsObject()
 	-- Let's try not to crash
@@ -114,7 +128,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	else
 		vehicle.OnWorld = true
 	end
-
+	
 	local prev = ply:GetAllowWeaponsInVehicle()
 	if prev then
 		ply.sitting_allowswep = nil
@@ -353,10 +367,18 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			return
 		end
 
-
 		local min, max = ent:GetCollisionBounds()
 		local zadjust = math.abs( min.z ) + math.abs( max.z )
-		local vehicle = Sit(ply, ent:GetPos() + Vector( 0, 0, 10 + zadjust / 2), ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
+		local seatPos = ent:GetPos() + Vector( 0, 0, 10 + zadjust / 2)
+
+		do
+			local bone = ent:LookupBone("ValveBiped.Bip01_Neck1")
+			if bone then
+				seatPos = ent:GetBonePosition(bone) - Vector(0, 0, 14)
+			end
+		end
+
+		local vehicle = Sit(ply, seatPos, ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
 
 		return vehicle
 	end
