@@ -105,6 +105,8 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 			vehicle.holder:Spawn()
 			vehicle.holder:SetTargetEnt(parent, vehicle, pos, ang)
 			vehicle:SetParent(vehicle.holder)
+
+			parent.holder = vehicle.holder
 		else
 			vehicle:SetParent(parent)
 		end
@@ -288,6 +290,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			and veh:GetDriver():IsValid()
 			and not veh.PlayerSitOnPlayer
 		then
+			if IsValid(veh.holder) and veh.holder.GetTargetPlayer and veh.holder:GetTargetPlayer() == ply then return end
 
 			if veh:GetDriver():GetInfoNum("sitting_disallow_on_me",0) ~= 0 then
 				ply:ChatPrint(veh:GetDriver():Name() .. " has disabled sitting!")
@@ -326,11 +329,12 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			end
 		end
 	end
+
 	local shouldSitOnPlayer = (ply.IsFlying and ply:IsFlying()) or EyeTrace.Entity == ply:GetGroundEntity() or ply:GetMoveType() == MOVETYPE_NOCLIP
 	if IsValid( EyeTrace.Entity ) and EyeTrace.Entity:IsPlayer() and SittingOnPlayer2:GetBool() and shouldSitOnPlayer then
 		ent = EyeTrace.Entity
 		if IsValid(ent:GetVehicle()) then return end
-
+		if IsValid(ent.holder) and ent.GetTargetPlayer and ent:GetTargetPlayer() == ent then return end
 		if ent:GetInfoNum("sitting_disallow_on_me",0) == 1 then
 			ply:ChatPrint(ent:Name() .. " has disabled sitting!")
 			return

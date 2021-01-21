@@ -6,7 +6,7 @@ ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_OPAQUE
 
 ENT.PhysShadowControl = {
-    secondstoarrive = 0.01,
+    secondstoarrive = 0.1,
     pos = Vector(0, 0, 0),
     angle = Angle(0, 0, 0),
     maxspeed = 1000000,
@@ -53,9 +53,22 @@ function ENT:Think()
             self:AddToMotionController(pyo)
             pyo:Wake()
         end
-    elseif self:GetActivated() then
-        if not IsValid(self:GetSeat()) or not IsValid(self:GetTargetPlayer()) then
+    end
+    if self:GetActivated() then
+        if SERVER and (not IsValid(self:GetSeat()) or not IsValid(self:GetTargetPlayer())) then
             SafeRemoveEntity(self)
+        end
+
+        local ent, seat = self:GetTargetPlayer(), self:GetSeat()
+        if self:GetActivated() and IsValid(ent) and IsValid(seat) then
+            local tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent:GetPos(), ent:GetRenderAngles())
+            --self:SetPos(tPos)
+            --self:SetAngles(tAng)
+
+            if CLIENT then
+                seat:SetRenderOrigin(tPos)
+                seat:SetRenderAngles(tAng)
+            end
         end
     end
 end
@@ -102,7 +115,7 @@ if CLIENT then
 
     end
 
-    hook.Add("CalcView", "SitAnywhereFollow", function(ply, pos, angles, fov )
+    hook.Remove("CalcView", "SitAnywhereFollow", function(ply, pos, angles, fov )
         local veh = ply:GetVehicle()
 
         if ply ~= LocalPlayer() or not IsValid(veh) or not IsValid(veh:GetParent()) or veh:GetParent():GetClass() ~= "sit_holder" then return end
