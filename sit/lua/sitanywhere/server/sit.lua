@@ -291,6 +291,19 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			and not veh.PlayerSitOnPlayer
 		then
 			if IsValid(veh.holder) and veh.holder.GetTargetPlayer and veh.holder:GetTargetPlayer() == ply then return end
+			local findSeat
+
+			function findSeat(tVeh, depth)
+				depth = (depth or 0) + 1
+				if IsValid(tVeh:GetParent()) and tVeh:GetParent():GetClass() == "sit_holder" and tVeh:GetParent():GetTargetPlayer() == ply then
+					return true
+				end
+				if depth < 50 and IsValid(tVeh:GetParent()) then
+					return findSeat(tVeh:GetParent(), depth)
+				end
+				return false
+			end
+			if findSeat(veh) then return end
 
 			if veh:GetDriver():GetInfoNum("sitting_disallow_on_me",0) ~= 0 then
 				ply:ChatPrint(veh:GetDriver():Name() .. " has disabled sitting!")
@@ -344,6 +357,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		local min, max = ent:GetCollisionBounds()
 		local zadjust = math.abs( min.z ) + math.abs( max.z )
 		local vehicle = Sit(ply, ent:GetPos() + Vector( 0, 0, 10 + zadjust / 2), ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
+
 		return vehicle
 	end
 

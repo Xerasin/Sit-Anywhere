@@ -1,4 +1,4 @@
---easylua.StartEntity("sit_holder")
+easylua.StartEntity("sit_holder")
 ENT.Type = "anim"
 ENT.PrintName = "Sit Holder"
 ENT.Model = "models/sprops/rectangles_superthin/size_2_5/rect_18x18.mdl"
@@ -114,40 +114,6 @@ if CLIENT then
     function ENT:Draw()
 
     end
-
-    hook.Remove("CalcView", "SitAnywhereFollow", function(ply, pos, angles, fov )
-        local veh = ply:GetVehicle()
-
-        if ply ~= LocalPlayer() or not IsValid(veh) or not IsValid(veh:GetParent()) or veh:GetParent():GetClass() ~= "sit_holder" then return end
-
-        local holder = veh:GetParent()
-        if not holder.GetActivated or not holder:GetActivated() then return end
-        local tPos, _ = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), ply:GetPos(), ply:GetRenderAngles())
-
-        local bottom, top = ply:GetHull()
-        local diff = top.Z - bottom.Z
-        tPos.z = tPos.z - diff * 0.65
-
-        local tAng = ply:EyeAngles()
-        tAng.y = tAng.y - 180
-        local view
-        if veh:GetThirdPersonMode() then
-            view = {
-                origin = tPos - ( tAng:Forward() * 100 ),
-                angles = tAng,
-                fov = fov,
-                drawviewer = true
-            }
-        else
-            view = {
-                origin = tPos,
-                angles = tAng,
-                fov = fov,
-                drawviewer = false
-            }
-        end
-        return view
-    end)
 end
 --easylua.EndEntity()
 
