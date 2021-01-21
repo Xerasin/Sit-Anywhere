@@ -60,10 +60,18 @@ function ENT:Think()
         end
         local seat = self:GetSeat()
         if CLIENT and IsValid(seat) and self:GetActivated() and not seat.RenderOverride then
-            local holder = self
+            local function findholder(sSeat)
+                for k,v in pairs(ents.FindByClass("sit_holder")) do
+                    if v:GetSeat() == sSeat then return v end
+                end
+            end
+
             seat.RenderOverride = function(sSeat)
+                if not sSeat.Draw then return end
+                local holder = findholder(sSeat)
                 if not IsValid(holder) then sSeat:Draw() return end
-                local ent = self:GetTargetPlayer()
+
+                local ent = holder:GetTargetPlayer()
                 if not IsValid(ent) then sSeat:Draw() return end
 
                 local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), ent:GetRenderOrigin(), ent:GetRenderAngles())
