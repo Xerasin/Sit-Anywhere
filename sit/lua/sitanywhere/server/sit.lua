@@ -98,7 +98,16 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		local r = math.rad(ang.yaw + 90)
 		vehicle.plyposhack = vehicle:WorldToLocal(pos + Vector(math.cos(r) * 2, math.sin(r) * 2, 2))
 
-		vehicle:SetParent(parent)
+		if parent:IsPlayer() then
+			vehicle.holder = ents.Create("sit_holder")
+			vehicle.holder:SetPos(pos)
+			vehicle.holder:SetAngles(ang)
+			vehicle.holder:Spawn()
+			vehicle.holder:SetTargetEnt(parent, vehicle, pos, ang)
+			vehicle:SetParent(vehicle.holder)
+		else
+			vehicle:SetParent(parent)
+		end
 		vehicle.parent = parent
 	else
 		vehicle.OnWorld = true
@@ -317,17 +326,16 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			end
 		end
 	end
-
-	if IsValid( EyeTrace.Entity ) and EyeTrace.Entity:IsPlayer() and EyeTrace.Entity == ply:GetGroundEntity() then
+	local shouldSitOnPlayer = (ply.IsFlying and ply:IsFlying()) or EyeTrace.Entity == ply:GetGroundEntity() or ply:GetMoveType() == MOVETYPE_NOCLIP
+	if IsValid( EyeTrace.Entity ) and EyeTrace.Entity:IsPlayer() and SittingOnPlayer2:GetBool() and shouldSitOnPlayer then
 		ent = EyeTrace.Entity
-		if ent:IsPlayer() and not SittingOnPlayer2:GetBool() then return end
+		if IsValid(ent:GetVehicle()) then return end
 
-		if ent:IsPlayer() and ent:GetInfoNum("sitting_disallow_on_me",0) == 1 then
+		if ent:GetInfoNum("sitting_disallow_on_me",0) == 1 then
 			ply:ChatPrint(ent:Name() .. " has disabled sitting!")
 			return
 		end
 
-		if IsValid(ent:GetVehicle()) then return end
 
 		local min, max = ent:GetCollisionBounds()
 		local zadjust = math.abs( min.z ) + math.abs( max.z )

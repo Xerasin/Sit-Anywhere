@@ -14,39 +14,14 @@ local arrow = Material("widgets/arrow.png")
 
 local function StartSit(trace)
 	local wantedAng = nil
+	local cancelled = false
 	local start = CurTime()
 	local ply = LocalPlayer()
-
-	local function EndSit()
-		net.Start("SitAnywhere")
-			net.WriteInt(SitAnywhere.NET.SitWantedAng, 4)
-			net.WriteFloat(wantedAng.y)
-			net.WriteVector(trace.StartPos)
-			net.WriteVector(trace.Normal)
-		net.SendToServer()
-		wantedAng = nil
-	end
-
-	hook.Add("KeyRelease", "seats_use", function(_, key)
-		if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
-		if key ~= IN_USE then return end
-		hook.Remove("KeyRelease", "seats_use")
-		hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
-
-		if CurTime() - start < 0.25 then
-			RunConsoleCommand("sit")
-			return
-		end
-
-		if wantedAng then
-			EndSit()
-		end
-	end)
 
 	hook.Add("PostDrawOpaqueRenderables", "SitAnywhere", function(depth, skybox)
 		if CurTime() - start <= 0.25 then return end
 		if trace.StartPos:Distance(ply:EyePos()) > 10 then
-			hook.Remove("KeyRelease", "seats_use")
+			cancelled, wantedAng = true, nil
 			hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
 			return
 		end
@@ -79,8 +54,8 @@ local function StartSit(trace)
 	end)
 
 	return function()
-		hook.Remove("KeyRelease", "seats_use")
 		hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
+		if cancelled then return end
 
 		if CurTime() - start < 0.25 then
 			RunConsoleCommand("sit")
@@ -88,7 +63,13 @@ local function StartSit(trace)
 		end
 
 		if wantedAng then
-			EndSit()
+			net.Start("SitAnywhere")
+				net.WriteInt(SitAnywhere.NET.SitWantedAng, 4)
+				net.WriteFloat(wantedAng.y)
+				net.WriteVector(trace.StartPos)
+				net.WriteVector(trace.Normal)
+			net.SendToServer()
+			wantedAng = nil
 		end
 	end
 end
@@ -128,9 +109,9 @@ concommand.Add("-sit", function(ply, cmd, args)
 end)
 
 
-hook.Add("KeyPress","seats_use",function(ply, key)
+hook.Add("KeyPress", "SitAnywhere", function(ply, key)
 	if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
-
+	if currSit then return end
 
 	if key ~= IN_USE then return end
 	local good = not useAlt:GetBool()
@@ -160,53 +141,15 @@ hook.Add("KeyPress","seats_use",function(ply, key)
 	local trace = LocalPlayer():GetEyeTrace()
 
 	if trace.Hit then
-		DoSit(trace)
+		currSit = DoSit(trace)
+		hook.Add("KeyRelease", "SitAnywhere", function(releasePly, releaseKey)
+			if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
+			if ply ~= releasePly or releaseKey ~= IN_USE then return end
+			hook.Remove("KeyRelease", "SitAnywhere")
+			if not currSit then return end
+
+			currSit()
+			currSit = nil
+		end)
 	end
 end)
-
---[[local useHeld = false
-hook.Add("CreateMove", "seats_use", function(cmd)
-	if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
-	local buttons = cmd:GetButtons()
-
-	if bit.band(buttons, IN_USE) == 0 then
-		useHeld = false
-		return
-	end
-
-	
-	local ply = LocalPlayer()
-	local good = not useAlt:GetBool()
-	local alwaysSit = ShouldSit(ply)
-
-	if forceBinds:GetBool() then
-		if useAlt:GetBool() and (input.IsKeyDown(KEY_LALT) or input.IsKeyDown(KEY_RALT)) then
-			good = true
-		end
-	else
-		if useAlt:GetBool() and bit.band(buttons, IN_WALK) == IN_WALK then
-			good = true
-		end
-	end
-
-	if SittingNoAltServer:GetBool() then
-		good = true
-	end
-
-	if alwaysSit == true then
-		good = true
-	elseif alwaysSit == false then
-		good = false
-	end
-
-	if not good then return end
-	local trace = LocalPlayer():GetEyeTrace()
-	if trace.Hit then
-		cmd:SetButtons(bit.bxor(bit.bor(buttons, IN_USE), IN_USE))
-		if useHeld then return true end
-		useHeld = true
-		DoSit(trace)
-		--RunConsoleCommand("sit")
-		return true
-	end
-end)]]
