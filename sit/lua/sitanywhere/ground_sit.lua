@@ -1,19 +1,11 @@
 
 local tag = "ground_sit"
 
-local sitting = 0
-
-
-local time, speed = 1.5, 1.25
 hook.Add("SetupMove", tag, function(ply, mv)
 	local butts = mv:GetButtons()
 
 	if not ply:GetNWBool(tag) then
 		return
-	end
-
-	if CLIENT then
-		sitting = math.Clamp(sitting - FrameTime() * speed, 0, time)
 	end
 
 	local getUp = bit.band(butts, IN_JUMP) == IN_JUMP or ply:GetMoveType() ~= MOVETYPE_WALK or ply:InVehicle() or not ply:Alive()
@@ -22,17 +14,12 @@ hook.Add("SetupMove", tag, function(ply, mv)
 		ply:SetNWBool(tag, false)
 	end
 
-	local move = bit.band(butts, IN_DUCK) == IN_DUCK -- do we want to move by ducking
+	local move = bit.band(butts, IN_DUCK) == IN_DUCK
 
-	butts = bit.bor(butts, bit.bor(IN_JUMP, IN_DUCK)) -- enable ducking
-
-	butts = bit.bxor(butts, IN_JUMP) -- disable jumpng
+	butts = bit.bxor(bit.bor(butts, bit.bor(IN_JUMP, IN_DUCK)), IN_JUMP)
 
 	if move then
-		butts = bit.bor(butts, IN_WALK) -- enable walking
-
-		butts = bit.bor(butts, IN_SPEED)
-		butts = bit.bxor(butts, IN_SPEED) -- disable sprinting
+		butts =  bit.bxor(bit.bor(bit.bor(butts, IN_WALK), IN_SPEED), IN_SPEED)
 
 		mv:SetButtons(butts)
 		return
@@ -63,8 +50,9 @@ if SERVER then
 				return
 			end
 
-			if not ply:GetNWBool("ground_sit") then
-				ply:ConCommand("ground_sit")
+			if not ply:GetNWBool(tag) then
+				ply:SetNWBool(tag, true)
+				ply.LastSit = CurTime() + 1
 				return true
 			end
 		end
@@ -72,7 +60,7 @@ if SERVER then
 
 	concommand.Add("ground_sit", function(ply)
 		if AllowGroundSit:GetBool() and (not ply.LastSit or ply.LastSit < CurTime()) then
-			ply:SetNWBool("ground_sit", not ply:GetNWBool("ground_sit"))
+			ply:SetNWBool(tag, not ply:GetNWBool(tag))
 			ply.LastSit = CurTime() + 1
 		end
 	end)

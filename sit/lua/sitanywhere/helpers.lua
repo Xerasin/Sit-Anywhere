@@ -11,7 +11,6 @@ SitAnywhere.ModelBlacklist = {
 }
 
 local EMETA = FindMetaTable"Entity"
---local PMETA = FindMetaTable"Player"
 
 function SitAnywhere.GetAreaProfile(pos, resolution, simple)
     local filter = player.GetAll()
@@ -106,3 +105,50 @@ function SitAnywhere.ValidSitTrace(ply, EyeTrace)
     end
     return true
 end
+
+local seatClass = "prop_vehicle_prisoner_pod"
+local PMETA = FindMetaTable"Player"
+function PMETA:GetSitters()
+    local seats, holders = {}, {}
+
+    local function processSeat(seat, depth)
+        depth = (depth or 0) + 1
+        if IsValid(seat:GetDriver()) then
+            table.insert(seats, seat)
+        end
+        for _, v in pairs(seat:GetChildren()) do
+            if IsValid(v) and v:GetClass() == seatClass and IsValid(v:GetDriver()) and #v:GetChildren() > 0 and depth <= 128 then
+                processSeat(v, depth)
+            end
+        end
+    end
+
+    local plyVehicle = self:GetVehicle()
+    if IsValid(plyVehicle) and plyVehicle:GetClass() == seatClass then
+        processSeat(plyVehicle)
+    end
+
+    for _, v in pairs(self:GetChildren()) do
+        if IsValid(v) and v:GetClass() == seatClass then
+            processSeat(v)
+        end
+    end
+
+    for _, v in pairs(ents.FindByClass(holderClass)) do
+        if v.GetTargetPlayer and v:GetTargetPlayer() == self then
+            table.insert(holders, v)
+            if v.GetSeat and IsValid(v:GetSeat()) then
+                processSeat(v:GetSeat())
+            end
+        end
+    end
+    return seats, holders
+end
+
+function PMETA:IsPlayerSittingOn(ply)
+    local seats = ply:GetSitters()
+    for _,v in pairs(seats) do
+        if IsValid(v:GetDriver()) and v:GetDriver() == self then return true end
+    end
+    return false
+end 

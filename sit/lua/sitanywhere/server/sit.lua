@@ -371,12 +371,12 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		local zadjust = math.abs( min.z ) + math.abs( max.z )
 		local seatPos = ent:GetPos() + Vector( 0, 0, 10 + zadjust / 2)
 
-		do
+		--[[do
 			local bone = ent:LookupBone("ValveBiped.Bip01_Neck1")
 			if bone then
 				seatPos = ent:GetBonePosition(bone) - Vector(0, 0, 9)
 			end
-		end
+		end]]
 
 		local vehicle = Sit(ply, seatPos, ply:GetAngles(), ent, EyeTrace.PhysicsBone or 0)
 
