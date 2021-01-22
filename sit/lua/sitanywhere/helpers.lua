@@ -113,7 +113,7 @@ function PMETA:GetSitters()
 
     local function processSeat(seat, depth)
         depth = (depth or 0) + 1
-        if IsValid(seat:GetDriver()) then
+        if IsValid(seat:GetDriver()) and seat:GetDriver() ~= self then
             table.insert(seats, seat)
         end
         for _, v in pairs(seat:GetChildren()) do
