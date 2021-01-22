@@ -1,7 +1,7 @@
 --easylua.StartEntity("sit_holder")
 ENT.Type = "anim"
 ENT.PrintName = "Sit Holder"
-ENT.Model = "models/sprops/rectangles_superthin/size_2_5/rect_18x18.mdl"
+ENT.Model = "models/props_junk/sawblade001a.mdl"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_OPAQUE
 
