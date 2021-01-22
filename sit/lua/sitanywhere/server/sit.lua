@@ -35,7 +35,15 @@ end)
 
 
 local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
-	ply:ExitVehicle()
+	if IsValid(ply:GetVehicle()) then
+		local veh = ply:GetVehicle()
+		if veh:GetClass() == "prop_vehicle_prisoner_pod" and IsValid(veh.holder) then
+			SafeRemoveEntity(veh.holder)
+		end
+		ply:ExitVehicle()
+	end
+
+
 	local function getHolders(pl)
 		local holders = {}
 		for _, v in pairs(ents.FindByClass("sit_holder")) do

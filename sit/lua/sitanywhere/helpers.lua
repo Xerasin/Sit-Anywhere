@@ -134,7 +134,7 @@ function PMETA:GetSitters()
         end
     end
 
-    for _, v in pairs(ents.FindByClass(holderClass)) do
+    for _, v in pairs(ents.FindByClass("sit_holder")) do
         if v.GetTargetPlayer and v:GetTargetPlayer() == self then
             table.insert(holders, v)
             if v.GetSeat and IsValid(v:GetSeat()) then
