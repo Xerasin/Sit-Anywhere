@@ -66,7 +66,7 @@ function ENT:Think()
         local seat = self:GetSeat()
         if CLIENT and IsValid(seat)  then
             local holder, targetPly = self, self:GetTargetPlayer()
-            if not seat.RenderOverride then
+            --[[if not seat.RenderOverride then
                 seat.RenderOverride = function(sSeat)
                     if not sSeat.Draw then return end
                     if not IsValid(holder) or not IsValid(targetPly) then sSeat:Draw() return end
@@ -76,7 +76,7 @@ function ENT:Think()
                     sSeat:SetRenderAngles(tAng)
                     sSeat:Draw()
                 end
-            end
+            end]]
             local function drawChildren(seatToCheck, depth)
                 depth = (depth or 0) + 1
                 for k,v in pairs(seatToCheck:GetChildren()) do
@@ -90,7 +90,7 @@ function ENT:Think()
                 end
             end
             if not IsValid(holder) or not IsValid(targetPly) then return end
-            local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), targetPly:GetPos(), targetPly:GetRenderAngles())
+            local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), targetPly:GetPos(), targetPly:GetRenderAngles() or targetPly:GetAngles() or Angle())
             seat:SetRenderOrigin(tPos)
             seat:SetRenderAngles(tAng)
 
@@ -127,7 +127,8 @@ function ENT:PhysicsSimulate(phys, deltatime)
 
     local ent = self:GetTargetPlayer()
     if self:GetActivated() and IsValid(ent) and IsValid(self:GetSeat()) then
-        tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent.GetRenderOrigin and ent:GetRenderOrigin() or ent:GetPos(), ent:GetRenderAngles())
+        local targetAng = (ent.GetRenderAngles and ent:GetRenderAngles() or ent:GetAngles())
+        tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent.GetRenderOrigin and ent:GetRenderOrigin() or ent:GetPos(), targetAng or Angle())
     end
 
     phys:Wake()
@@ -138,6 +139,7 @@ function ENT:PhysicsSimulate(phys, deltatime)
 
     return phys:ComputeShadowControl(self.PhysShadowControl)
 end
+function ENT:CanTool() return false end
 
 if CLIENT then
     function ENT:Draw()
@@ -145,3 +147,11 @@ if CLIENT then
     end
 end
 --easylua.EndEntity()
+
+if SERVER then
+    local function disallow(ent)
+        if IsValid(ent) and ent:GetClass() == "sit_holder" then return false end
+    end
+    hook.Add("GravGunPickupAllowed", "SitAnywhereHolder", function(_, ent) return disallow(ent) end)
+    hook.Add("PhysgunPickup", "SitAnywhereHolder", function(_, ent) return disallow(ent) end)
+end

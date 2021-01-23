@@ -7,6 +7,10 @@ SitAnywhere.ClassBlacklist = {
     ["gmod_wire_keyboard"] = true,
     ["prop_combine_ball"] = true
 }
+
+SitAnywhere.DoNotParent = {
+    ["yava_chunk"] = true
+}
 SitAnywhere.ModelBlacklist = {
 }
 
