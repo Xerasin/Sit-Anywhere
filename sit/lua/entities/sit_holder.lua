@@ -1,9 +1,12 @@
 --easylua.StartEntity("sit_holder")
+
 ENT.Type = "anim"
 ENT.PrintName = "Sit Holder"
-ENT.Model = "models/props_junk/sawblade001a.mdl"
+ENT.Model = "models/props_junk/PopCan01a.mdl"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+
+if SERVER then AddCSLuaFile() end
 
 ENT.PhysShadowControl = {
     secondstoarrive = 0.1,
@@ -24,6 +27,7 @@ function ENT:Initialize()
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+    self:AddEFlags(EFL_NO_DISSOLVE)
 
     if SERVER then
         local phys = self:GetPhysicsObject()
@@ -54,31 +58,45 @@ function ENT:Think()
             pyo:Wake()
         end
     end
+
     if self:GetActivated() then
         if SERVER and (not IsValid(self:GetSeat()) or not IsValid(self:GetTargetPlayer())) then
             SafeRemoveEntity(self)
         end
         local seat = self:GetSeat()
-        if CLIENT and IsValid(seat) and self:GetActivated() and not seat.RenderOverride then
-            local function findholder(sSeat)
-                for k,v in pairs(ents.FindByClass("sit_holder")) do
-                    if v:GetSeat() == sSeat then return v end
+        if CLIENT and IsValid(seat)  then
+            local holder, targetPly = self, self:GetTargetPlayer()
+            if not seat.RenderOverride then
+                seat.RenderOverride = function(sSeat)
+                    if not sSeat.Draw then return end
+                    if not IsValid(holder) or not IsValid(targetPly) then sSeat:Draw() return end
+                    local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), targetPly:GetRenderOrigin(), targetPly:GetRenderAngles())
+
+                    sSeat:SetRenderOrigin(tPos)
+                    sSeat:SetRenderAngles(tAng)
+                    sSeat:Draw()
                 end
             end
-
-            seat.RenderOverride = function(sSeat)
-                if not sSeat.Draw then return end
-                local holder = findholder(sSeat)
-                if not IsValid(holder) then sSeat:Draw() return end
-
-                local ent = holder:GetTargetPlayer()
-                if not IsValid(ent) then sSeat:Draw() return end
-
-                local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), ent:GetRenderOrigin(), ent:GetRenderAngles())
-                sSeat:SetRenderOrigin(tPos)
-                sSeat:SetRenderAngles(tAng)
-                sSeat:Draw()
+            local function drawChildren(seatToCheck, depth)
+                depth = (depth or 0) + 1
+                for k,v in pairs(seatToCheck:GetChildren()) do
+                    if v:GetClass() == "prop_vehicle_prisoner_pod" and v:GetNWBool("SitPose", false) and depth <= 128 then
+                        local pos, ang = v:GetNWVector("SitPosePos"), v:GetNWAngle("SitPoseAng")
+                        local tPos, tAng = LocalToWorld(pos, ang, seatToCheck:GetPos(), seatToCheck:GetRenderAngles())
+                        v:SetRenderOrigin(tPos)
+                        v:SetRenderAngles(tAng)
+                        drawChildren(v, depth)
+                    end
+                end
             end
+            if not IsValid(holder) or not IsValid(targetPly) then return end
+            local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), targetPly:GetPos(), targetPly:GetRenderAngles())
+            seat:SetRenderOrigin(tPos)
+            seat:SetRenderAngles(tAng)
+
+            drawChildren(seat)
+
+
         end
     end
 end
@@ -109,8 +127,9 @@ function ENT:PhysicsSimulate(phys, deltatime)
 
     local ent = self:GetTargetPlayer()
     if self:GetActivated() and IsValid(ent) and IsValid(self:GetSeat()) then
-        tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent:GetPos(), ent:GetRenderAngles())
+        tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent.GetRenderOrigin and ent:GetRenderOrigin() or ent:GetPos(), ent:GetRenderAngles())
     end
+
     phys:Wake()
 
     self.PhysShadowControl.pos = tPos
