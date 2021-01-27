@@ -71,6 +71,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	vehicle:SetPos(pos)
 
 	vehicle.playerdynseat = true
+	vehicle:SetNWBool("playerdynseat", true)
 	vehicle.oldpos = vehicle:WorldToLocal(ply:GetPos())
 	vehicle.oldang = vehicle:WorldToLocalAngles(ply:EyeAngles())
 	vehicle.wasCrouching = ply:Crouching()

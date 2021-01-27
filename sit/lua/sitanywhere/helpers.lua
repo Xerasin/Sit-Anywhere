@@ -155,4 +155,18 @@ function PMETA:IsPlayerSittingOn(ply)
         if IsValid(v:GetDriver()) and v:GetDriver() == self then return true end
     end
     return false
-end 
+end
+
+function PMETA:GetSitting()
+    if not IsValid(self:GetVehicle()) then return false end
+    local veh = self:GetVehicle()
+    if veh:GetNWBool("playerdynseat", false) then
+        local parent = veh:GetParent()
+        if IsValid(parent) and parent:GetClass() == "sit_holder" then
+            return veh, parent
+        else
+            return veh
+        end
+    end
+    return false
+end
