@@ -77,7 +77,15 @@ function ENT:Think()
                     sSeat:Draw()
                 end
             end]]
-            local function drawChildren(seatToCheck, depth)
+            local function setSeatDriver(tSeat, tPos, tAng)
+                local driver = tSeat:GetDriver()
+                if IsValid(driver) then
+                    driver:SetRenderOrigin(tPos)
+                    driver:SetRenderAngles(tAng + Angle(0, 90, 0))
+                end
+            end
+
+            local function fixChildren(seatToCheck, depth)
                 depth = (depth or 0) + 1
                 for k,v in pairs(seatToCheck:GetChildren()) do
                     if v:GetClass() == "prop_vehicle_prisoner_pod" and v:GetNWBool("SitPose", false) and depth <= 128 then
@@ -85,7 +93,8 @@ function ENT:Think()
                         local tPos, tAng = LocalToWorld(pos, ang, seatToCheck:GetPos(), seatToCheck:GetRenderAngles())
                         v:SetRenderOrigin(tPos)
                         v:SetRenderAngles(tAng)
-                        drawChildren(v, depth)
+                        setSeatDriver(v, tPos, tAng)
+                        fixChildren(v, depth)
                     end
                 end
             end
@@ -93,8 +102,8 @@ function ENT:Think()
             local tPos, tAng = LocalToWorld(holder:GetTargetLocalPos(), holder:GetTargetLocalAng(), targetPly:GetPos(), targetPly:GetRenderAngles() or targetPly:GetAngles() or Angle())
             seat:SetRenderOrigin(tPos)
             seat:SetRenderAngles(tAng)
-
-            drawChildren(seat)
+            setSeatDriver(seat, tPos, tAng)
+            fixChildren(seat)
 
 
         end
