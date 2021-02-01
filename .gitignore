@@ -43,3 +43,4 @@ luac.out
 pygit_logger.log
 lastcommit.txt
 tests/*.lua
+.vscode/*.json
