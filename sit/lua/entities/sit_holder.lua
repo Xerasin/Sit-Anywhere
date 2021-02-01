@@ -1,4 +1,4 @@
-easylua.StartEntity("sit_holder")
+--easylua.StartEntity("sit_holder")
 
 ENT.Type = "anim"
 ENT.PrintName = "Sit Holder"
@@ -6,7 +6,7 @@ ENT.Model = "models/props_junk/PopCan01a.mdl"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_OPAQUE
 
---if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 
 ENT.PhysShadowControl = {
     secondstoarrive = 0.1,
@@ -156,7 +156,7 @@ if CLIENT then
 
     end
 end
-easylua.EndEntity()
+--easylua.EndEntity()
 
 if SERVER then
     local function disallow(ent)
