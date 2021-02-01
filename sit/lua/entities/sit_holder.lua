@@ -1,4 +1,4 @@
---easylua.StartEntity("sit_holder")
+easylua.StartEntity("sit_holder")
 
 ENT.Type = "anim"
 ENT.PrintName = "Sit Holder"
@@ -6,7 +6,7 @@ ENT.Model = "models/props_junk/PopCan01a.mdl"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_OPAQUE
 
-if SERVER then AddCSLuaFile() end
+--if SERVER then AddCSLuaFile() end
 
 ENT.PhysShadowControl = {
     secondstoarrive = 0.1,
@@ -40,29 +40,32 @@ function ENT:Initialize()
 
         self:SetActivated(false)
     else
-        local pyo = self:GetPhysicsObject()
-        if IsValid(pyo) then
-            self:AddToMotionController(pyo)
-            pyo:Wake()
-        end
+        self:AttachMotion()
     end
     self:StartMotionController()
 end
 
-local activated = false
-function ENT:Think()
-    if CLIENT then
-        local pyo = self:GetPhysicsObject()
-        if not activated and IsValid(pyo) then
-            self:AddToMotionController(pyo)
-            pyo:Wake()
-        end
+function ENT:AttachMotion()
+    if SERVER then return end
+    if self.POAttached then return end
+    local pyo = self:GetPhysicsObject()
+
+    if IsValid(pyo) then
+        self:AddToMotionController(pyo)
+        pyo:Wake()
+        self.POAttached = true
     end
+end
+
+
+function ENT:Think()
+    if CLIENT then self:AttachMotion() end
 
     if self:GetActivated() then
         if SERVER and (not IsValid(self:GetSeat()) or not IsValid(self:GetTargetPlayer())) then
             SafeRemoveEntity(self)
         end
+
         local seat = self:GetSeat()
         if CLIENT and IsValid(seat)  then
             local holder, targetPly = self, self:GetTargetPlayer()
@@ -104,8 +107,6 @@ function ENT:Think()
             seat:SetRenderAngles(tAng)
             setSeatDriver(seat, tPos, tAng)
             fixChildren(seat)
-
-
         end
     end
 end
@@ -155,7 +156,7 @@ if CLIENT then
 
     end
 end
---easylua.EndEntity()
+easylua.EndEntity()
 
 if SERVER then
     local function disallow(ent)
