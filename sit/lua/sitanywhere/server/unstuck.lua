@@ -87,26 +87,23 @@ local function UnstuckPlayer(pl)
 		forward.z = 0
 		forward:Normalize()
 		right = forward:Angle():Right()
-		for i = 1,100 do
+		for i = 1, 10 do
 			ok = true
-			if not FindPassableSpace(1, forward, SearchScale)
-				and not FindPassableSpace(2, right, SearchScale)
-				and not FindPassableSpace(3, right, -SearchScale)
-				and not FindPassableSpace(4, up, SearchScale)
-				and not FindPassableSpace(5, up, -SearchScale)
-				and not FindPassableSpace(6, forward, -SearchScale) then
+			if not FindPassableSpace(1, forward, SearchScale * i)
+				and not FindPassableSpace(2, right, SearchScale * i)
+				and not FindPassableSpace(3, right, -SearchScale * i)
+				and not FindPassableSpace(4, up, SearchScale * i)
+				and not FindPassableSpace(5, up, -SearchScale * i)
+				and not FindPassableSpace(6, forward, -SearchScale * i) then
 					ok = false
 			end
-			if ok then break end
+			if ok then print(i) break end
 		end
 
 		if not ok then return false end
 
 		if OldPos == NewPos then
-			print("Unstuck: Shouldnothappen")
-			-- Not stuck?
-			-- For some reason setting origin MAY apply some velocity so we're resetting it here.
-
+			ply:SetPos(NewPos)
 			return true
 		else
 			ply:SetPos(NewPos)
@@ -126,11 +123,4 @@ local Player = FindMetaTable"Player"
 
 function Player:UnStuck()
 	return UnstuckPlayer(self)
-end
-
-
-local Entity = FindMetaTable"Entity"
-
-Entity.UnStuck = Entity.UnStuck or function()
-	assert(false,"not implemented")
 end
