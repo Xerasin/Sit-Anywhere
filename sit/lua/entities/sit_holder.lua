@@ -138,7 +138,7 @@ function ENT:PhysicsSimulate(phys, deltatime)
     local ent = self:GetTargetPlayer()
     if self:GetActivated() and IsValid(ent) and IsValid(self:GetSeat()) then
         local targetAng = (ent.GetRenderAngles and ent:GetRenderAngles() or ent:GetAngles())
-        tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent.GetRenderOrigin and ent:GetRenderOrigin() or ent:GetPos(), targetAng or Angle())
+        tPos, tAng = LocalToWorld(self:GetTargetLocalPos(), self:GetTargetLocalAng(), ent:GetPos(), targetAng or Angle())
     end
 
     phys:Wake()
