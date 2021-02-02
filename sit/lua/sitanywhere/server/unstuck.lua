@@ -97,7 +97,7 @@ local function UnstuckPlayer(pl)
 				and not FindPassableSpace(6, forward, -SearchScale * i) then
 					ok = false
 			end
-			if ok then print(i) break end
+			if ok then break end
 		end
 
 		if not ok then return false end
