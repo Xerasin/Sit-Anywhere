@@ -87,7 +87,7 @@ local function UnstuckPlayer(pl)
 		forward.z = 0
 		forward:Normalize()
 		right = forward:Angle():Right()
-		for i = 1, 25 do
+		for i = 1, 10 do
 			ok = true
 			if not FindPassableSpace(1, forward, SearchScale * i)
 				and not FindPassableSpace(2, right, SearchScale * i)
@@ -123,11 +123,4 @@ local Player = FindMetaTable"Player"
 
 function Player:UnStuck()
 	return UnstuckPlayer(self)
-end
-
-
-local Entity = FindMetaTable"Entity"
-
-Entity.UnStuck = Entity.UnStuck or function()
-	assert(false,"not implemented")
 end
