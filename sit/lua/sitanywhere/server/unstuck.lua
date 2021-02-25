@@ -1,11 +1,6 @@
-
-do -- is stuck checker
-
-	local output = {}
-	local pl_filt
-	local filter_tbl  = {}
-	local function filter_func(e)
-		if e == pl_filt then return false end
+local function returnFilter(pl)
+	return function(e)
+		if e == pl then return false end
 		local cg = e:GetCollisionGroup()
 
 		return
@@ -16,33 +11,25 @@ do -- is stuck checker
 		and cg ~= 20 -- COLLISION_GROUP_WORLD
 
 	end
-	local t = {output = output ,mask = MASK_PLAYERSOLID}
-	FindMetaTable"Player".IsStuck = function(pl,fast,pos)
-		t.start = pos or pl:GetPos()
-		t.endpos = t.start
-		if fast then
-			filter_tbl[1] = pl
-			t.filter = filter_tbl
-		else
-			pl_filt = pl
-			t.filter = filter_func
-		end
-
-
-		util.TraceEntity(t,pl)
-		return output.StartSolid,output.Entity,output
-	end
-
 end
 
+local function IsStuck(pl, fast, pos)
+	local t = {mask = MASK_PLAYERSOLID}
 
-local ply = nil
+	t.start = pos or pl:GetPos()
+	t.endpos = t.start
 
-local NewPos = nil
+	if fast then
+		t.filter = {pl}
+	else
+		t.filter = returnFilter(pl)
+	end
 
-local dirs = {}
+	local output = util.TraceEntity(t, pl)
+	return output.StartSolid, output.Entity, output
+end
 
-local function FindPassableSpace(n, direction, step)
+local function FindPassableSpace(ply, dirs, n, direction, step)
 	local origin = dirs[n]
 	if not origin then
 		origin = ply:GetPos()
@@ -53,10 +40,10 @@ local function FindPassableSpace(n, direction, step)
 		--origin = VectorMA( origin, step, direction )
 		origin:Add(step * direction)
 
-		if not ply:IsStuck(false,origin) then
+		if not IsStuck(ply, false, origin) then
 			ply:SetPos(origin)
-			if not ply:IsStuck(false) then
-				NewPos = ply:GetPos()
+			if not IsStuck(ply, false) then
+				ply.NewPos = ply:GetPos()
 				return true
 			end
 		end
@@ -72,29 +59,28 @@ end
 ]]
 
 --local forward = Vector(1,0,0)
-local right = Vector(0,1,0)
-local up = Vector(0,0,1)
-local function UnstuckPlayer(pl)
-	ply = pl
-	NewPos = ply:GetPos()
+local right = Vector(0, 1, 0)
+local up = Vector(0, 0, 1)
+local function UnstuckPlayer(ply)
+	ply.NewPos = ply:GetPos()
 	local OldPos = NewPos
 
-	dirs = {}
-	if ply:IsStuck() then
+	local dirs = {}
+	if IsStuck(ply) then
 		local SearchScale = 1 -- Increase and it will unstuck you from even harder places but with lost accuracy. Please, don't try higher values than 12
 		local ok
 		local forward = ply:GetAimVector()
 		forward.z = 0
 		forward:Normalize()
 		right = forward:Angle():Right()
-		for i = 1, 10 do
+		for i = 1, 20 do
 			ok = true
-			if not FindPassableSpace(1, forward, SearchScale * i)
-				and not FindPassableSpace(2, right, SearchScale * i)
-				and not FindPassableSpace(3, right, -SearchScale * i)
-				and not FindPassableSpace(4, up, SearchScale * i)
-				and not FindPassableSpace(5, up, -SearchScale * i)
-				and not FindPassableSpace(6, forward, -SearchScale * i) then
+			if	  not FindPassableSpace(ply, dirs, 1, forward, SearchScale * i)
+				and not FindPassableSpace(ply, dirs, 2, right, SearchScale * i)
+				and not FindPassableSpace(ply, dirs, 3, right, -SearchScale * i)
+				and not FindPassableSpace(ply, dirs, 4, up, SearchScale * i)
+				and not FindPassableSpace(ply, dirs, 5, up, -SearchScale * i)
+				and not FindPassableSpace(ply, dirs, 6, forward, -SearchScale * i) then
 					ok = false
 			end
 			if ok then break end
@@ -102,11 +88,14 @@ local function UnstuckPlayer(pl)
 
 		if not ok then return false end
 
-		if OldPos == NewPos then
-			ply:SetPos(NewPos)
+		if OldPos == ply.NewPos then
+			ply:SetPos(ply.NewPos)
+			ply.NewPos = nil
+
 			return true
 		else
-			ply:SetPos(NewPos)
+			ply:SetPos(ply.NewPos)
+			ply.NewPos = nil
 
 			if SERVER and ply and ply:IsValid() and ply:GetPhysicsObject():IsValid() then
 				ply:SetVelocity(-ply:GetVelocity())
