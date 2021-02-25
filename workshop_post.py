@@ -3,7 +3,7 @@ import os
 from pprint import pprint
 from subprocess import check_output
 
-gmodUtilDir = "D:\\Program Files (x86)\\Steam\\SteamApps\\common\\GarrysMod\\bin"
+gmodUtilDir = "D:\\SteamLibrary\\steamapps\\common\\GarrysMod\\bin"
 
 dir_path = os.path.dirname(os.path.realpath(__file__))  + "\\"
 repository_path = pygit2.discover_repository(dir_path)

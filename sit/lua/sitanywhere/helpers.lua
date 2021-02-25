@@ -179,12 +179,12 @@ function PMETA:ExitSit()
             net.WriteInt(SitAnywhere.NET.SitRequestExit, 4)
         net.SendToServer()
     else
-        local seat, holder = ply:GetSitting()
+        local seat, holder = self:GetSitting()
         SafeRemoveEntity(seat)
         SafeRemoveEntity(holder)
 
-        if SitAnywhere.GroundSit and ply:GetNWBool("SitGroundSitting", false) then
-            ply:SetNWBool("SitGroundSitting", false)
+        if SitAnywhere.GroundSit and self:GetNWBool("SitGroundSitting", false) then
+            self:SetNWBool("SitGroundSitting", false)
         end
     end
 end
