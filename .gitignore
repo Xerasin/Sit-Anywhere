@@ -44,3 +44,4 @@ pygit_logger.log
 lastcommit.txt
 tests/*.lua
 .vscode/*.json
+workshop_post.py
