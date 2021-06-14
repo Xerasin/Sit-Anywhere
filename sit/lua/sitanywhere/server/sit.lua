@@ -30,6 +30,8 @@ net.Receive("SitAnywhere", function(len, ply)
 		})
 
 		ply:Sit(trace, nil, nil, nil, nil, nil, wantedAng)
+	elseif netID == SitAnywhere.NET.SitRequestExit then
+		ply:ExitSit()
 	end
 end)
 

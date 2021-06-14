@@ -1,5 +1,7 @@
+SitAnywhere = SitAnywhere or {}
+SitAnywhere.GroundSit = true
 
-local tag = "ground_sit"
+local tag = "SitGroundSitting"
 
 hook.Add("SetupMove", tag, function(ply, mv)
 	local butts = mv:GetButtons()

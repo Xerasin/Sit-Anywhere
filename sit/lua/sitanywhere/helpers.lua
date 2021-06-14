@@ -1,6 +1,7 @@
 SitAnywhere = SitAnywhere or {}
 SitAnywhere.NET = {
     ["SitWantedAng"] = 0,
+    ["SitRequestExit"] = 1,
 }
 
 SitAnywhere.ClassBlacklist = {
@@ -169,4 +170,21 @@ function PMETA:GetSitting()
         end
     end
     return false
+end
+
+function PMETA:ExitSit()
+    if CLIENT then
+        if self ~= LocalPlayer() then return end
+        net.Start("SitAnywhere")
+            net.WriteInt(SitAnywhere.NET.SitRequestExit, 4)
+        net.SendToServer()
+    else
+        local seat, holder = self:GetSitting()
+        SafeRemoveEntity(seat)
+        SafeRemoveEntity(holder)
+
+        if SitAnywhere.GroundSit and self:GetNWBool("SitGroundSitting", false) then
+            self:SetNWBool("SitGroundSitting", false)
+        end
+    end
 end
