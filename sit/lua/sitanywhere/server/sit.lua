@@ -137,10 +137,6 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		ply:SetAllowWeaponsInVehicle(true)
 	end
 
-	timer.Simple(0, function()
-		ply:SetFOV(ply:GetFOV(),0) -- FOV Bug Fix.
-	end)
-
 	ply:EnterVehicle(vehicle)
 
 	if PlayerDamageOnSeats:GetBool() then
@@ -585,12 +581,6 @@ hook.Add("CanTool", "SA_DontTouchYourself", function(ply, tr)
 	end
 end)
 
-hook.Add("PlayerSwitchWeapon", "VehicleFOVFix", function(ply, ent)
-	if IsValid(ply) and ply:InVehicle() then
-		ply:SetFOV(ply:GetFOV(), 0)
-	end
-end)
-
 local checked = {}
 hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	if not IsValid(self) or not IsValid(ply) then return end
@@ -639,9 +629,7 @@ hook.Add("PlayerDeath","SitSeat",function(pl)
 	end
 end)
 
-hook.Add("PlayerEnteredVehicle","unsits",function(pl,veh)
-	pl:SetFOV(pl:GetFOV(),0) -- FOV Fix
-
+hook.Add("PlayerEnteredVehicle","unsits",function(pl, veh)
 	for k,v in next,player.GetAll() do
 		if v ~= pl and v:InVehicle() and v:GetVehicle():IsValid() and v:GetVehicle():GetParent() == pl then
 			v:ExitVehicle()
@@ -676,7 +664,7 @@ timer.Create("RemoveSeats",15,0,function()
 	end
 end)
 
-hook.Add("InitPostEntity", "SAW_CompatFix", function()
+--[=[hook.Add("InitPostEntity", "SAW_CompatFix", function()
 	if hook.GetTable()["CanExitVehicle"]["PAS_ExitVehicle"] and PM_SendPassengers then
 		local function IsSCarSeat( seat )
 			if IsValid(seat) and seat.IsScarSeat and seat.IsScarSeat == true then
@@ -703,4 +691,4 @@ hook.Add("InitPostEntity", "SAW_CompatFix", function()
 			end
 		end)
 	end
-end)
+end)]=]
