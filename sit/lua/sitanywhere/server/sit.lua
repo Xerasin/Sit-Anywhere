@@ -123,7 +123,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		local r = math.rad(ang.yaw + 90)
 		vehicle.plyposhack = vehicle:WorldToLocal(pos + Vector(math.cos(r) * 2, math.sin(r) * 2, 2))
 
-		if parent:IsPlayer() or SitAnywhere.DoNotParent[parent:GetClass()] then
+		--[[if parent:IsPlayer() or SitAnywhere.DoNotParent[parent:GetClass()] then
 			vehicle.holder = ents.Create("sit_holder")
 			vehicle.holder:SetPos(pos)
 			vehicle.holder:SetAngles(ang)
@@ -134,7 +134,9 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 			parent.holder = vehicle.holder
 		else
 			vehicle:SetParent(parent)
-		end
+		end]]
+
+		vehicle:SetParent(parent)
 		vehicle.parent = parent
 	else
 		vehicle.OnWorld = true
