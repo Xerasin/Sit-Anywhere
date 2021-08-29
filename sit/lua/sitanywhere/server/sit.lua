@@ -420,9 +420,11 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			for I = 1, #dists do
 				local trace = dists[I]
 				local behind = distsang[(trace.ang + 180) % 360]
+
+				print(behind.Distance2, eyeang.yaw - trace.ang)
 				if behind.Distance2 > 3 then
 					local cost = 0
-					if math.abs(eyeang.yaw - trace.ang) > 6 then
+					if math.abs(eyeang.yaw - trace.ang) > 16 then
 						cost = cost + 30
 					end
 					local tbl = {
