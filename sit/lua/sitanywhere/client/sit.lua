@@ -98,6 +98,7 @@ end
 local currSit
 concommand.Add("+sit", function(ply, cmd, args)
 	if currSit then return end
+	if not IsValid(ply) or not ply.GetEyeTrace then return end
 	currSit = DoSit(ply:GetEyeTrace())
 end)
 
