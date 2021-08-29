@@ -386,7 +386,8 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 
 	if math.abs(surfaceAng.pitch) <= 15 then
 		ang = Angle()
-		local dists, distsang, ang_smallest_hori, smallest_hori = SitAnywhere.GetAreaProfile(EyeTrace.HitPos, 24, false)
+		local sampleResolution = 24
+		local dists, distsang, ang_smallest_hori, smallest_hori = SitAnywhere.GetAreaProfile(EyeTrace.HitPos, sampleResolution, false)
 		local infront = ((ang_smallest_hori or 0) + 180) % 360
 
 
@@ -420,10 +421,9 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			for I = 1, #dists do
 				local trace = dists[I]
 				local behind = distsang[(trace.ang + 180) % 360]
-
 				if behind.Distance2 > 3 then
 					local cost = 0
-					if math.abs(eyeang.yaw - trace.ang) > 16 then
+					if math.abs(eyeang.yaw - trace.ang) > ((180 / sampleResolution) + 0.1) then
 						cost = cost + 30
 					end
 					local tbl = {
