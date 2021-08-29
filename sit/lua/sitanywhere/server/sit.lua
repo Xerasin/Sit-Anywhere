@@ -422,18 +422,14 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 				local trace = dists[I]
 				local behind = distsang[(trace.ang + 180) % 360]
 				if behind.Distance2 > 3 then
-					local cost = 0
-					if math.abs(eyeang.yaw - trace.ang) > ((180 / sampleResolution) + 0.1) then
-						cost = cost + 30
-					end
 					local tbl = {
-						cost = cost,
+						cost = math.abs(eyeang.yaw - trace.ang),
 						ang = trace.ang,
 					}
 					table.insert(wants, tbl)
 				end
 			end
-
+			
 			table.sort(wants,function(a,b) return b.cost > a.cost end)
 			if #wants == 0 then return end
 			ang.yaw = (wants[1].ang - 90)
