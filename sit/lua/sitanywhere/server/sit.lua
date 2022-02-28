@@ -165,7 +165,14 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		func(ply)
 	end
 
-	ply.seatExit = exit
+	ply.seatExit = function(exitPly)
+		if PlayerDamageOnSeats:GetBool() then
+			exitPly:SetCollisionGroup(COLLISION_GROUP_PLAYER)
+			exitPly:CollisionRulesChanged()
+		end
+		if exit then exit(exitPly) end
+	end
+
 	ply:SetEyeAngles(Angle(0,90,0))
 
 	return vehicle
@@ -256,9 +263,6 @@ local function FindPose(this,me)
 	end)
 	return lookup[1][2]
 end
-
-
-
 
 function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 	if EyeTrace == nil then
