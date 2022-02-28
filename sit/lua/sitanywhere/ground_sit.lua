@@ -1,9 +1,8 @@
 SitAnywhere = SitAnywhere or {}
 SitAnywhere.GroundSit = true
+local TAG = "SitAnyG_"
 
-local tag = "SitGroundSitting"
-
-hook.Add("SetupMove", tag, function(ply, mv)
+hook.Add("SetupMove", TAG .. "SetupMove", function(ply, mv)
 	local butts = mv:GetButtons()
 
 	if not ply:GetNWBool(tag) then
@@ -33,7 +32,7 @@ hook.Add("SetupMove", tag, function(ply, mv)
 	mv:SetUpSpeed(0)
 end)
 
-hook.Add("CalcMainActivity", tag, function(ply, vel)
+hook.Add("CalcMainActivity", TAG .. "CalcMainActivity", function(ply, vel)
 	local seq = ply:LookupSequence("pose_ducking_02")
 	if ply:GetNWBool(tag) and seq and vel:Length2DSqr() < 1 then
 		return ACT_MP_SWIM, seq
@@ -45,7 +44,7 @@ end)
 
 if SERVER then
 	local AllowGroundSit = CreateConVar("sitting_allow_ground_sit","1",{FCVAR_ARCHIVE})
-	hook.Add("HandleSit","GroundSit", function(ply, dists, EyeTrace)
+	hook.Add("HandleSit", "GroundSit", function(ply, dists, EyeTrace)
 		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() and ply:EyeAngles().p > 80 then
 			local t = hook.Run("OnGroundSit", ply, EyeTrace)
 			if t == false then

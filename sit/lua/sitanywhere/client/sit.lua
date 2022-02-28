@@ -1,6 +1,8 @@
+local TAG = "SitAny_"
 local useAlt = CreateClientConVar("sitting_use_alt",               "1.00", true, true)
 local forceBinds = CreateClientConVar("sitting_force_binds",       "0", true, true)
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
+
 
 CreateClientConVar("sitting_ground_sit",         "1.00", true, true)
 CreateClientConVar("sitting_disallow_on_me",       "0.00", true, true)
@@ -18,11 +20,11 @@ local function StartSit(trace)
 	local start = CurTime()
 	local ply = LocalPlayer()
 
-	hook.Add("PostDrawOpaqueRenderables", "SitAnywhere", function(depth, skybox)
+	hook.Add("PostDrawOpaqueRenderables", TAG .. "PostDrawOpaqueRenderables", function(depth, skybox)
 		if CurTime() - start <= 0.25 then return end
 		if trace.StartPos:Distance(ply:EyePos()) > 10 then
 			cancelled, wantedAng = true, nil
-			hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
+			hook.Remove("PostDrawOpaqueRenderables", TAG .. "PostDrawOpaqueRenderables")
 			return
 		end
 
@@ -54,7 +56,7 @@ local function StartSit(trace)
 	end)
 
 	return function()
-		hook.Remove("PostDrawOpaqueRenderables", "SitAnywhere")
+		hook.Remove("PostDrawOpaqueRenderables", TAG .. "PostDrawOpaqueRenderables")
 		if cancelled then return end
 
 		if CurTime() - start < 0.25 then
@@ -110,7 +112,7 @@ concommand.Add("-sit", function(ply, cmd, args)
 end)
 
 
-hook.Add("KeyPress", "SitAnywhere", function(ply, key)
+hook.Add("KeyPress", TAG .. "KeyPress", function(ply, key)
 	if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
 	if currSit then return end
 
@@ -143,10 +145,10 @@ hook.Add("KeyPress", "SitAnywhere", function(ply, key)
 
 	if trace.Hit then
 		currSit = DoSit(trace)
-		hook.Add("KeyRelease", "SitAnywhere", function(releasePly, releaseKey)
+		hook.Add("KeyRelease", TAG .. "KeyRelease", function(releasePly, releaseKey)
 			if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
 			if ply ~= releasePly or releaseKey ~= IN_USE then return end
-			hook.Remove("KeyRelease", "SitAnywhere")
+			hook.Remove("KeyRelease", TAG .. "KeyRelease")
 			if not currSit then return end
 
 			currSit()
