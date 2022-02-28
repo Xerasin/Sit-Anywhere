@@ -1,4 +1,6 @@
 if CLIENT then return end
+local TAG = "SitAny_"
+
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({},{__mode = 'k', __index = function() return 0 end})
 
@@ -527,10 +529,7 @@ local function UndoSitting(ply)
 end
 
 
-local PickupAllowed = {
-	"GravGunPickupAllowed",
-	"PhysgunPickup"
-}
+
 local cache = {}
 
 local CheckSeat
@@ -576,22 +575,27 @@ local function CheckSeat2(ply, ent)
 	return cache[ply:SteamID()][ent:EntIndex()][2]
 end
 
+
+local PickupAllowed = {
+	"GravGunPickupAllowed",
+	"PhysgunPickup"
+}
 for _,v in next, PickupAllowed do
-	hook.Add(v, "SA_DontTouchYourself", function(ply, ent)
+	hook.Add(v, TAG .. v, function(ply, ent)
 		if AntiPropSurf:GetBool() and CheckSeat2(ply, ent) == false then
 			return false
 		end
 	end)
 end
 
-hook.Add("CanTool", "SA_DontTouchYourself", function(ply, tr)
+hook.Add("CanTool", TAG .. "CanTool", function(ply, tr)
 	if AntiToolAbuse:GetBool() and IsValid(tr.Entity) and CheckSeat2(ply, tr.Entity) == false then
 		return false
 	end
 end)
 
 local checked = {}
-hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
+hook.Add("CanExitVehicle", TAG .. "CanExitVehicle", function(self, ply)
 	if not IsValid(self) or not IsValid(ply) then return end
 	if not self.playerdynseat then return end
 
@@ -618,13 +622,13 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	end)
 end)
 
-hook.Add("AllowPlayerPickup","Nopickupwithalt",function(ply)
+hook.Add("AllowPlayerPickup", TAG .. "AllowPlayerPickup", function(ply)
 	if ply:KeyDown(IN_WALK) then
 		return false
 	end
 end)
 
-hook.Add("PlayerDeath", "SitSeat", function(pl)
+hook.Add("PlayerDeath", TAG .. "PlayerDeath", function(pl)
 	local veh = pl:GetVehicle()
 	if IsValid(veh) and veh.playerdynseat then
 		SafeRemoveEntity(veh)
@@ -637,7 +641,7 @@ hook.Add("PlayerDeath", "SitSeat", function(pl)
 	end
 end)
 
-hook.Add("PlayerEnteredVehicle", "unsits",function(pl, veh)
+hook.Add("PlayerEnteredVehicle", TAG .. "PlayerEnteredVehicle",function(pl, veh)
 	for k,v in next, pl:GetChildren() do
 		if IsValid(v) and v.playerdynseat then
 			if IsValid(v.sittingPly) then
@@ -654,7 +658,7 @@ hook.Add("PlayerEnteredVehicle", "unsits",function(pl, veh)
 	end
 end)
 
-hook.Add("EntityRemoved", "Sitting_EntityRemoved", function(ent)
+hook.Add("EntityRemoved", TAG .. "EntityRemoved", function(ent)
 	if FixLegBug:GetBool() and ent.playerdynseat and IsValid(ent.sittingPly) then
 		UndoSitting(ent.sittingPly)
 	end
@@ -669,7 +673,7 @@ hook.Add("EntityRemoved", "Sitting_EntityRemoved", function(ent)
 	end
 end)
 
-timer.Create("RemoveSeats", 15, 0, function()
+timer.Create(TAG .. "RemoveSeats", 15, 0, function()
 	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do
 		if v.removeonexit and (not IsValid(v.sittingPly) or v:GetDriver() == nil or not v:GetDriver():IsValid() or v:GetDriver():GetVehicle() ~= v --[[???]]) then
 			v:Remove()
