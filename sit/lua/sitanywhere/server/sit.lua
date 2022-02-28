@@ -624,7 +624,12 @@ hook.Add("AllowPlayerPickup","Nopickupwithalt",function(ply)
 	end
 end)
 
-hook.Add("PlayerDeath","SitSeat",function(pl)
+hook.Add("PlayerDeath", "SitSeat", function(pl)
+	local veh = pl:GetVehicle()
+	if IsValid(veh) and veh.playerdynseat then
+		SafeRemoveEntity(veh)
+	end
+
 	for k, v in next, pl:GetChildren() do
 		if IsValid(v) and v.playerdynseat then
 			SafeRemoveEntity(v)
