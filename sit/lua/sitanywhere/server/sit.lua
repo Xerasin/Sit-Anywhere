@@ -46,7 +46,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 	end
 
 
-	local function getHolders(pl)
+	--[=[local function getHolders(pl)
 		local holders = {}
 		for _, v in pairs(ents.FindByClass("sit_holder")) do
 			if v.GetTargetPlayer and v:GetTargetPlayer() == pl then
@@ -58,7 +58,7 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 
 	for _, holder in next, getHolders(ply) do
 		SafeRemoveEntityDelayed(holder, 0.1)
-	end
+	end]=]
 
 	local vehicle = ents.Create("prop_vehicle_prisoner_pod")
 	local t = hook.Run("OnPlayerSit", ply, pos, ang, parent or NULL, parentbone, vehicle)
@@ -435,14 +435,13 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 				local trace = dists[I]
 				local behind = distsang[(trace.ang + 180) % 360]
 				if behind.Distance2 > 3 then
-					local tbl = {
+					table.insert(wants, {
 						cost = math.abs(eyeang.yaw - trace.ang),
 						ang = trace.ang,
-					}
-					table.insert(wants, tbl)
+					})
 				end
 			end
-			
+
 			table.sort(wants,function(a,b) return b.cost > a.cost end)
 			if #wants == 0 then return end
 			ang.yaw = (wants[1].ang - 90)
@@ -604,11 +603,6 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 	checked[self] = true
 	local oldpos = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
 
-	local OnExit = function()
-		UndoSitting(ply)
-	end
-
-
 	if IsValid(self) then
 		SafeRemoveEntity(self)
 	end
@@ -619,7 +613,7 @@ hook.Add("CanExitVehicle","Remove_Seat",function(self, ply)
 			if ply.UnStuck then
 				ply:UnStuck()
 			end
-			OnExit()
+			UndoSitting(ply)
 		end)
 	end)
 end)
@@ -631,18 +625,20 @@ hook.Add("AllowPlayerPickup","Nopickupwithalt",function(ply)
 end)
 
 hook.Add("PlayerDeath","SitSeat",function(pl)
-	for k,v in next, player.GetAll() do
-		local veh = v:GetVehicle()
-		if veh:IsValid() and veh.playerdynseat and veh:GetParent() == pl then
-			veh:Remove()
+	for k, v in next, pl:GetChildren() do
+		if IsValid(v) and v.playerdynseat then
+			SafeRemoveEntity(v)
 		end
 	end
 end)
 
-hook.Add("PlayerEnteredVehicle","unsits",function(pl, veh)
-	for k,v in next,player.GetAll() do
-		if v ~= pl and v:InVehicle() and v:GetVehicle():IsValid() and v:GetVehicle():GetParent() == pl then
-			v:ExitVehicle()
+hook.Add("PlayerEnteredVehicle", "unsits",function(pl, veh)
+	for k,v in next, pl:GetChildren() do
+		if IsValid(v) and v.playerdynseat then
+			if IsValid(v.sittingPly) then
+				v.sittingPly:ExitVehicle()
+			end
+			SafeRemoveEntity(v)
 		end
 	end
 
@@ -653,22 +649,24 @@ hook.Add("PlayerEnteredVehicle","unsits",function(pl, veh)
 	end
 end)
 
-hook.Add("EntityRemoved","Sitting_EntityRemoved",function(ent)
+hook.Add("EntityRemoved", "Sitting_EntityRemoved", function(ent)
 	if FixLegBug:GetBool() and ent.playerdynseat and IsValid(ent.sittingPly) then
 		UndoSitting(ent.sittingPly)
 	end
 
-	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do
-		if v:GetParent() == ent and IsValid(v:GetDriver()) then
-			v:GetDriver():ExitVehicle()
-			v:Remove()
+	for k,v in next, ent:GetChildren() do
+		if v.playerdynseat then
+			if IsValid(v.sittingPly) then
+				v.sittingPly:ExitVehicle()
+			end
+			SafeRemoveEntity(v)
 		end
 	end
 end)
 
-timer.Create("RemoveSeats",15,0,function()
+timer.Create("RemoveSeats", 15, 0, function()
 	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do
-		if v.removeonexit and (v:GetDriver() == nil or not v:GetDriver():IsValid() or v:GetDriver():GetVehicle() ~= v --[[???]]) then
+		if v.removeonexit and (not IsValid(v.sittingPly) or v:GetDriver() == nil or not v:GetDriver():IsValid() or v:GetDriver():GetVehicle() ~= v --[[???]]) then
 			v:Remove()
 		end
 	end
