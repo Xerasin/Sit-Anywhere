@@ -1,13 +1,13 @@
 {
-    "title": "The Sit Anywhere Script!",
-    "type": "tool",
-    "tags": ["roleplay", "realism"],
-    "ignore": [
-        "*.psd",
-        "*.vcproj",
-        "*.svn*",
-        ".git/*",
-        ".gitignore",
-        "*.gma"
-    ]
+	"title": "The Sit Anywhere Script!",
+	"type": "tool",
+	"tags": ["roleplay", "realism"],
+	"ignore": [
+		"*.psd",
+		"*.vcproj",
+		"*.svn*",
+		".git/*",
+		".gitignore",
+		"*.gma"
+	]
 }

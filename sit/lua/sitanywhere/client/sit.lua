@@ -1,11 +1,11 @@
 local TAG = "SitAny_"
-local useAlt = CreateClientConVar("sitting_use_alt",               "1.00", true, true)
-local forceBinds = CreateClientConVar("sitting_force_binds",       "0", true, true)
+local useAlt = CreateClientConVar("sitting_use_alt", "1.00", true, true)
+local forceBinds = CreateClientConVar("sitting_force_binds", "0", true, true)
 local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 
 
-CreateClientConVar("sitting_ground_sit",         "1.00", true, true)
-CreateClientConVar("sitting_disallow_on_me",       "0.00", true, true)
+CreateClientConVar("sitting_ground_sit", "1.00", true, true)
+CreateClientConVar("sitting_disallow_on_me", "0.00", true, true)
 
 local function ShouldSit(ply)
 	return hook.Run("ShouldSit", ply)

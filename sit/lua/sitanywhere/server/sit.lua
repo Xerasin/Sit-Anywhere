@@ -1,15 +1,15 @@
 if CLIENT then return end
 local TAG = "SitAny_"
+SitAnywhere = SitAnywhere or {}
 
 --Oh my god I can sit anywhere! by Xerasin--
-local NextUse = setmetatable({},{__mode = 'k', __index = function() return 0 end})
+local NextUse = setmetatable({}, {__mode = 'k', __index = function() return 0 end})
 
 local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_ARCHIVE})
 local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_ARCHIVE})
 local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_ARCHIVE})
 local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_ARCHIVE})
 local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE})
-local FixLegBug = CreateConVar("sitting_fix_leg_bug","1",{FCVAR_ARCHIVE})
 local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE})
 local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE})
 local AllowSittingTightPlaces = CreateConVar("sitting_allow_tight_places","0",{FCVAR_ARCHIVE})
@@ -37,8 +37,7 @@ net.Receive("SitAnywhere", function(len, ply)
 	end
 end)
 
-
-local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
+local function Sit(ply, pos, ang, parent, parentbone, func, exit)
 	if IsValid(ply:GetVehicle()) then
 		local veh = ply:GetVehicle()
 		if veh:GetClass() == "prop_vehicle_prisoner_pod" and IsValid(veh.holder) then
@@ -76,14 +75,14 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 
 	vehicle.playerdynseat = true
 	vehicle:SetNWBool("playerdynseat", true)
+	vehicle.sittingPly = ply
 	vehicle.oldpos = vehicle:WorldToLocal(ply:GetPos())
-	vehicle.oldang = vehicle:WorldToLocalAngles(ply:EyeAngles())
 	vehicle.wasCrouching = ply:Crouching()
 
 	vehicle:SetModel("models/nova/airboat_seat.mdl") -- DO NOT CHANGE OR CRASHES WILL HAPPEN
 
 	vehicle:SetKeyValue("vehiclescript", "scripts/vehicles/prisoner_pod.txt")
-	vehicle:SetKeyValue("limitview","0")
+	vehicle:SetKeyValue("limitview", "0")
 	vehicle:Spawn()
 	vehicle:Activate()
 
@@ -159,20 +158,11 @@ local function Sit(ply, pos, ang, parent, parentbone,  func, exit)
 		ply:CollisionRulesChanged()
 	end
 
-	vehicle.removeonexit = true
-	vehicle.sittingPly = ply
 	if func then
 		func(ply)
 	end
 
-	ply.seatExit = function(exitPly)
-		if PlayerDamageOnSeats:GetBool() then
-			exitPly:SetCollisionGroup(COLLISION_GROUP_PLAYER)
-			exitPly:CollisionRulesChanged()
-		end
-		if exit then exit(exitPly) end
-	end
-
+	ply.seatExit = exit
 	ply:SetEyeAngles(Angle(0,90,0))
 
 	return vehicle
@@ -186,6 +176,16 @@ local SittingOnPlayerPoses =
 	{
 		Pos = Vector(-33,13,7),
 		Ang = Angle(0,90,90),
+		Func = function(ply)
+			if not ply:LookupBone("ValveBiped.Bip01_R_Thigh") then return end
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,90,0))
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,90,0))
+		end,
+		OnExitFunc = function(ply)
+			if not ply:LookupBone("ValveBiped.Bip01_R_Thigh") then return end
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,0,0))
+			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,0,0))
+		end,
 		FindAng = 90,
 	},
 	{
@@ -272,7 +272,6 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 	end
 
 	local valid, ent = SitAnywhere.ValidSitTrace(ply, EyeTrace)
-	if ent then return ent end
 	if not valid then return end
 	local surfaceAng = EyeTrace.HitNormal:Angle() + Angle(-270, 0, 0)
 	ang = surfaceAng
@@ -290,7 +289,6 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 	end
 
 	if SittingOnPlayer:GetBool() then -- Sitting on SITTING Players
-
 		local veh
 		if not EyeTrace.HitWorld and IsValid(EyeTrace.Entity) and EyeTrace.Entity:IsPlayer() and IsValid(EyeTrace.Entity:GetVehicle()) and EyeTrace.Entity:GetVehicle().playerdynseat then
 			local safe = 256
@@ -357,9 +355,9 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 
 			ent = Sit(ply, vec, ang2, veh, 0, pose.Func, pose.OnExitFunc)
 
-			ent:SetNWVector("SitPosePos", veh:WorldToLocal(ent:GetPos()))
+			--[[ent:SetNWVector("SitPosePos", veh:WorldToLocal(ent:GetPos()))
 			ent:SetNWVector("SitPoseAng", veh:WorldToLocalAngles(ent:GetAngles()))
-			ent:SetNWBool("SitPose", true)
+			ent:SetNWBool("SitPose", true)]]
 
 			if ent and IsValid(ent) then
 				ent.PlayerOnPlayer = true
@@ -370,7 +368,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		end
 	else
 		for k, v in pairs(ents.FindInSphere(EyeTrace.HitPos, 5)) do
-			if v.removeonexit then
+			if v.playerdynseat then
 				return false
 			end
 		end
@@ -401,7 +399,6 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 
 		return vehicle
 	end
-
 
 	if math.abs(surfaceAng.pitch) <= 15 then
 		ang = Angle()
@@ -517,18 +514,22 @@ concommand.Add("sit",function(ply, cmd, args)
 end)
 
 local function UndoSitting(ply)
-	if IsValid(ply) then
-		local prev = ply.sitting_allowswep
+	if not IsValid(ply) then return end
 
-		if prev ~= nil then
-			ply.sitting_allowswep = nil
-			ply:SetAllowWeaponsInVehicle(prev)
-		end
+	local prev = ply.sitting_allowswep
+	if prev ~= nil then
+		ply.sitting_allowswep = nil
+		ply:SetAllowWeaponsInVehicle(prev)
+	end
 
-		if ply.seatExit then
-			ply.seatExit(ply)
-			ply.seatExit = nil
-		end
+	if PlayerDamageOnSeats:GetBool() then
+		ply:SetCollisionGroup(COLLISION_GROUP_PLAYER)
+		ply:CollisionRulesChanged()
+	end
+
+	if ply.seatExit then
+		ply.seatExit(ply)
+		ply.seatExit = nil
 	end
 end
 
@@ -598,32 +599,36 @@ hook.Add("CanTool", TAG .. "CanTool", function(ply, tr)
 	end
 end)
 
-local checked = {}
-hook.Add("CanExitVehicle", TAG .. "CanExitVehicle", function(self, ply)
-	if not IsValid(self) or not IsValid(ply) then return end
-	if not self.playerdynseat then return end
+
+hook.Add("CanExitVehicle", TAG .. "CanExitVehicle", function(seat, ply)
+	if not IsValid(seat) or not IsValid(ply) then return end
+	if not seat.playerdynseat then return end
 
 	if CurTime() < NextUse[ply] then return false end
+end)
+
+hook.Add("PlayerLeaveVehicle", TAG .. "PlayerLeaveVehicle", function(ply, seat)
+	if not IsValid(seat) or not IsValid(ply) then return end
+	if not seat.playerdynseat then return end
 
 	NextUse[ply] = CurTime() + 1
 
-	if checked[self] then return end
-	checked[self] = true
-	local oldpos = self:LocalToWorld(self.oldpos), self:LocalToWorldAngles(self.oldang)
+	local oldpos = seat:LocalToWorld(seat.oldpos)
 
-	if IsValid(self) then
-		SafeRemoveEntity(self)
+	ply:SetPos(oldpos)
+	if ply.UnStuck then
+		ply:UnStuck()
 	end
 
-	timer.Create("SitThe_" .. ply:EntIndex(), 0, 1, function()
-		ply:SetPos(oldpos)
-		timer.Create("FDown_" .. ply:EntIndex(), 1, 1, function()
-			if ply.UnStuck then
-				ply:UnStuck()
-			end
-			UndoSitting(ply)
-		end)
-	end)
+
+	for _, v in next, seat:GetChildren() do
+		if IsValid(v) and v.playerdynseat and IsValid(v.sittingPly) then
+			v.sittingPly:ExitVehicle()
+		end
+	end
+
+	SafeRemoveEntityDelayed(seat, 1)
+	UndoSitting(ply)
 end)
 
 hook.Add("AllowPlayerPickup", TAG .. "AllowPlayerPickup", function(ply)
@@ -639,47 +644,42 @@ hook.Add("PlayerDeath", TAG .. "PlayerDeath", function(pl)
 	end
 
 	for k, v in next, pl:GetChildren() do
-		if IsValid(v) and v.playerdynseat then
-			SafeRemoveEntity(v)
+		if IsValid(v) and v.playerdynseat and IsValid(v.sittingPly) then
+			v.sittingPly:ExitVehicle()
 		end
 	end
 end)
 
 hook.Add("PlayerEnteredVehicle", TAG .. "PlayerEnteredVehicle",function(pl, veh)
 	for k,v in next, pl:GetChildren() do
-		if IsValid(v) and v.playerdynseat then
-			if IsValid(v.sittingPly) then
-				v.sittingPly:ExitVehicle()
-			end
-			SafeRemoveEntity(v)
+		if IsValid(v) and v.playerdynseat and IsValid(v.sittingPly) then
+			v.sittingPly:ExitVehicle()
 		end
 	end
 
 	DropEntityIfHeld( veh )
 
-	if veh:GetParent():IsValid() then
-		DropEntityIfHeld( veh:GetParent() )
+	local parent = veh:GetParent()
+	if IsValid(parent) then
+		DropEntityIfHeld(parent)
 	end
 end)
 
 hook.Add("EntityRemoved", TAG .. "EntityRemoved", function(ent)
-	if FixLegBug:GetBool() and ent.playerdynseat and IsValid(ent.sittingPly) then
+	if ent.playerdynseat and IsValid(ent.sittingPly) then
 		UndoSitting(ent.sittingPly)
 	end
 
-	for k,v in next, ent:GetChildren() do
-		if v.playerdynseat then
-			if IsValid(v.sittingPly) then
-				v.sittingPly:ExitVehicle()
-			end
-			SafeRemoveEntity(v)
+	for _, v in next, ent:GetChildren() do
+		if IsValid(v) and v.playerdynseat and IsValid(v.sittingPly) then
+			v.sittingPly:ExitVehicle()
 		end
 	end
 end)
 
 timer.Create(TAG .. "RemoveSeats", 15, 0, function()
 	for k,v in pairs(ents.FindByClass("prop_vehicle_prisoner_pod")) do
-		if v.removeonexit and (not IsValid(v.sittingPly) or v:GetDriver() == nil or not v:GetDriver():IsValid() or v:GetDriver():GetVehicle() ~= v --[[???]]) then
+		if v.playerdynseat and (not IsValid(v.sittingPly) or v:GetDriver() == nil or not v:GetDriver():IsValid() or v:GetDriver():GetVehicle() ~= v --[[???]]) then
 			v:Remove()
 		end
 	end
