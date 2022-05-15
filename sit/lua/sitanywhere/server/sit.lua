@@ -611,15 +611,11 @@ hook.Add("PlayerLeaveVehicle", TAG .. "PlayerLeaveVehicle", function(ply, seat)
 	if not IsValid(seat) or not IsValid(ply) then return end
 	if not seat.playerdynseat then return end
 
-	NextUse[ply] = CurTime() + 1
-
 	local oldpos = seat:LocalToWorld(seat.oldpos)
-
 	ply:SetPos(oldpos)
 	if ply.UnStuck then
 		ply:UnStuck()
 	end
-
 
 	for _, v in next, seat:GetChildren() do
 		if IsValid(v) and v.playerdynseat and IsValid(v.sittingPly) then
