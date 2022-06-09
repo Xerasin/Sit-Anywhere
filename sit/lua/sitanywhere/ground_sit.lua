@@ -43,7 +43,7 @@ end)
 
 
 if SERVER then
-	local AllowGroundSit = CreateConVar("sitting_allow_ground_sit", "1", {FCVAR_ARCHIVE}, "Toggle ground sitting for the entire server", 0, 1)
+	local AllowGroundSit = CreateConVar("sitting_allow_ground_sit", "1", {FCVAR_ARCHIVE}, "Allows people to sit on the ground on your server", 0, 1)
 	hook.Add("HandleSit", "GroundSit", function(ply, dists, EyeTrace)
 		if #dists == 0 and ply:GetInfoNum("sitting_ground_sit", 1) == 1 and AllowGroundSit:GetBool() and ply:EyeAngles().p > 80 then
 			local t = hook.Run("OnGroundSit", ply, EyeTrace)
@@ -66,5 +66,5 @@ if SERVER then
 		end
 	end)
 else
-	CreateClientConVar("sitting_ground_sit", "1.00", true, true, "Toggle ground sitting for yourself", 0, 1)
+	CreateClientConVar("sitting_ground_sit", "1.00", true, true, "Toggles the ability for you to sit on the ground", 0, 1)
 end

@@ -1,9 +1,9 @@
 local TAG = "SitAny_"
-local useAlt = CreateClientConVar("sitting_use_walk", "1.00", true, true, "Makes SitAnywhere require the use of walk, disable this to sit simply by using use", 0, 1)
-local forceBinds = CreateClientConVar("sitting_force_left_alt", "0", true, true, "Forces left alt to always act as a walk key for SitAnywhere", 0, 1)
+local useAlt = CreateClientConVar("sitting_use_walk", "1.00", true, true, "Makes sitting require the use of walk, disable this to sit simply by using use", 0, 1)
+local forceBinds = CreateClientConVar("sitting_force_left_alt", "0", true, true, "Forces left alt to always act as a walk key for sitting", 0, 1)
 local SittingNoAltServer = CreateConVar("sitting_force_no_walk","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
 
-CreateClientConVar("sitting_disallow_on_me", "0.00", true, true, "Disallow people to sit on you")
+CreateClientConVar("sitting_allow_on_me", "1.00", true, true, "Allow people to sit on you", 0, 1)
 
 local function ShouldSit(ply)
 	return hook.Run("ShouldSit", ply)
