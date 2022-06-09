@@ -65,4 +65,6 @@ if SERVER then
 			ply.LastSit = CurTime() + 1
 		end
 	end)
+else
+	CreateClientConVar("sitting_ground_sit", "1.00", true, true, "Toggle ground sitting for yourself", 0, 1)
 end
