@@ -5,13 +5,13 @@ SitAnywhere = SitAnywhere or {}
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({}, {__mode = 'k', __index = function() return 0 end})
 
-local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_ARCHIVE}, "Allow players to sit on SitAnywhere sitting players", 0, 1)
-local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_ARCHIVE}, "Allow players to sit on actual player entities", 0, 1)
-local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_ARCHIVE}, "Can damage SitAnywhere sitting players (hacky, not a true solution)", 0, 1)
+local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_ARCHIVE}, "Allows players to sit on SitAnywhere sitting players", 0, 1)
+local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_ARCHIVE}, "Allows players to sit on actual player entities", 0, 1)
+local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_ARCHIVE}, "Allows damaging sitting players (hacky, not a true solution)", 0, 1)
 local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_ARCHIVE}, "Allows the use of weapons in SitAnywhere sitting", 0, 1)
-local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE}, "Lock sitting to admins only (uses PLAYER:IsAdmin)", 0, 1)
-local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE}, "Allows the use of the physgun on contraptions with someone sitting on them", 0, 1)
-local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE}, "Allows the use of the toolgun on contraptions with someone sitting on them", 0, 1)
+local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE}, "Locks sitting to admins only (uses PLAYER:IsAdmin)", 0, 1)
+local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE}, "Disables the use of the physgun on contraptions with someone sitting on them", 0, 1)
+local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE}, "Disables the use of the toolgun on contraptions with someone sitting on them", 0, 1)
 local AllowSittingTightPlaces = CreateConVar("sitting_allow_tight_places","0",{FCVAR_ARCHIVE}, "Allows sitting in places where a player cannot physically stand, allows easier clipping", 0, 1)
 CreateConVar("sitting_force_no_walk","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Disables the need for using walk to sit anywhere on your server", 0, 1)
 
