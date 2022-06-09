@@ -9,9 +9,7 @@ local function ShouldSit(ply)
 	return hook.Run("ShouldSit", ply)
 end
 
-local arrow = Material("widgets/arrow.png")
-
-
+local arrow, drawScale = Material("widgets/arrow.png"), 0.1
 local function StartSit(trace)
 	local wantedAng = nil
 	local cancelled = false
@@ -26,14 +24,14 @@ local function StartSit(trace)
 			return
 		end
 
-		local traceDist, drawScale = 20, 0.1
+		local traceDist = 20
 		local vec = util.IntersectRayWithPlane(ply:EyePos(), ply:EyeAngles():Forward(), trace.HitPos, Vector(0, 0, 1))
 		if not vec then
 			return
 		end
 
 		local posOnPlane = WorldToLocal(vec, Angle(0, 90, 0), trace.HitPos, Angle(0, 0, 0))
-		local testVec = (posOnPlane):GetNormal() * traceDist / drawScale
+		local testVec = posOnPlane:GetNormal() * traceDist / drawScale
 		local currentAng = (trace.HitPos - vec):Angle()
 		wantedAng = currentAng
 
@@ -45,7 +43,7 @@ local function StartSit(trace)
 		if wantedAng then
 			local goodSit = SitAnywhere.CheckValidAngForSit(trace.HitPos, trace.HitNormal:Angle(), wantedAng.y)
 			if not goodSit then wantedAng = nil end
-			cam.Start3D2D(trace.HitPos + Vector(0, 0, 1), Angle(0, 0, 0), 0.1)
+			cam.Start3D2D(trace.HitPos + Vector(0, 0, 1), Angle(0, 0, 0), drawScale)
 				surface.SetDrawColor(goodSit and Color(255, 255, 255, 255) or Color(255, 0, 0, 255))
 				surface.SetMaterial(arrow)
 				surface.DrawTexturedRectRotated(testVec.x * 0.5, testVec.y * -0.5, 2 / drawScale, traceDist / drawScale, currentAng.y + 90)
