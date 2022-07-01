@@ -530,7 +530,7 @@ end
 
 
 
-local cache = {}
+local cache = setmetatable({}, {__mode = 'k'})
 
 local CheckSeat
 function CheckSeat(ply, ent, tbl)
@@ -567,12 +567,18 @@ end
 local function CheckSeat2(ply, ent)
 	if not IsValid(ply:GetVehicle()) or not ply:GetVehicle().playerdynseat then return end
 
-	if cache[ply:SteamID()] and cache[ply:SteamID()][ent:EntIndex()] and (CurTime() - cache[ply:SteamID()][ent:EntIndex()][1]) < 5 then
-		return cache[ply:SteamID()][ent:EntIndex()][2]
+	local playerIndex, entIndex = ply:EntIndex(), ent:EntIndex()
+	if cache[playerIndex] and (not cache[playerIndex].steamID or cache[playerIndex].steamID ~= ply:SteamID64()) then
+		cache[playerIndex] = nil
 	end
-	cache[ply:SteamID()] = cache[ply:SteamID()] or {}
-	cache[ply:SteamID()][ent:EntIndex()] = {CurTime(), CheckSeat(ply, ent, {})}
-	return cache[ply:SteamID()][ent:EntIndex()][2]
+
+	if cache[playerIndex] and cache[playerIndex][entIndex] and (CurTime() - cache[playerIndex][entIndex][1]) < 5 then
+		return cache[playerIndex][entIndex][2]
+	end
+
+	cache[playerIndex] = cache[playerIndex] or {steamID = ply:SteamID64()}
+	cache[playerIndex][entIndex] = {CurTime(), CheckSeat(ply, ent, {})}
+	return cache[playerIndex][entIndex][2]
 end
 
 
