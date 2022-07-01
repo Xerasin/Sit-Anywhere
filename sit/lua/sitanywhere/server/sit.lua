@@ -332,7 +332,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			end
 			if findSeat(veh) then return end
 
-			if veh:GetDriver():GetInfoNum("sitting_allow_on_me", 1) ~= 1 then
+			if veh:GetDriver():GetInfoNum("sitting_allow_on_me", 1) == 0 then
 				ply:ChatPrint(veh:GetDriver():Name() .. " has disabled sitting!")
 				return false
 			end
