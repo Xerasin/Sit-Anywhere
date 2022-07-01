@@ -67,7 +67,7 @@ function SitAnywhere.CheckValidAngForSit(pos, surfaceAng, ang)
 end
 
 
-local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
+local SitOnEntsMode = CreateConVar("sitting_ent_mode","3", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "0 = No entities\n1 = World entities only\n2 = Self-Owned, World, Unowned\n3 = Any Entity", 0, 3)
 --[[
 	0 - Can't sit on any ents
 	1 - Can't sit on any player ents

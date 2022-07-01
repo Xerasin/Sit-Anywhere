@@ -8,6 +8,7 @@
 		"*.svn*",
 		".git/*",
 		".gitignore",
+        ".gitattributes",
 		"*.gma"
 	]
 }

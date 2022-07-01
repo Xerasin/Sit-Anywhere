@@ -5,15 +5,15 @@ SitAnywhere = SitAnywhere or {}
 --Oh my god I can sit anywhere! by Xerasin--
 local NextUse = setmetatable({}, {__mode = 'k', __index = function() return 0 end})
 
-local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_ARCHIVE})
-local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_ARCHIVE})
-local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_ARCHIVE})
-local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_ARCHIVE})
-local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE})
-local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE})
-local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE})
-local AllowSittingTightPlaces = CreateConVar("sitting_allow_tight_places","0",{FCVAR_ARCHIVE})
-CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
+local SittingOnPlayer = CreateConVar("sitting_can_sit_on_players","1",{FCVAR_ARCHIVE}, "Allows players to sit on SitAnywhere sitting players", 0, 1)
+local SittingOnPlayer2 = CreateConVar("sitting_can_sit_on_player_ent","1",{FCVAR_ARCHIVE}, "Allows players to sit on actual player entities", 0, 1)
+local PlayerDamageOnSeats = CreateConVar("sitting_can_damage_players_sitting","0",{FCVAR_ARCHIVE}, "Allows damaging sitting players (hacky, not a true solution)", 0, 1)
+local AllowWeaponsInSeat = CreateConVar("sitting_allow_weapons_in_seat","0",{FCVAR_ARCHIVE}, "Allows the use of weapons in SitAnywhere sitting", 0, 1)
+local AdminOnly = CreateConVar("sitting_admin_only","0",{FCVAR_ARCHIVE}, "Locks sitting to admins only (uses PLAYER:IsAdmin)", 0, 1)
+local AntiPropSurf = CreateConVar("sitting_anti_prop_surf","1",{FCVAR_ARCHIVE}, "Disables the use of the physgun on contraptions with someone sitting on them", 0, 1)
+local AntiToolAbuse = CreateConVar("sitting_anti_tool_abuse","1",{FCVAR_ARCHIVE}, "Disables the use of the toolgun on contraptions with someone sitting on them", 0, 1)
+local AllowSittingTightPlaces = CreateConVar("sitting_allow_tight_places","0",{FCVAR_ARCHIVE}, "Allows sitting in places where a player cannot physically stand, allows easier clipping", 0, 1)
+CreateConVar("sitting_force_no_walk","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Disables the need for using walk to sit anywhere on your server", 0, 1)
 
 local META = FindMetaTable("Player")
 
@@ -332,15 +332,10 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			end
 			if findSeat(veh) then return end
 
-			if veh:GetDriver():GetInfoNum("sitting_disallow_on_me",0) ~= 0 then
+			if veh:GetDriver():GetInfoNum("sitting_allow_on_me",0) ~= 0 then
 				ply:ChatPrint(veh:GetDriver():Name() .. " has disabled sitting!")
 				return false
 			end
-
-			--[[if sitting_disallow_on_me then
-				ply:ChatPrint("You've disabled sitting on players!")
-				return false 
-			end]]
 
 			local pose = FindPose(veh, ply) -- SittingOnPlayerPoses[math.random(1, #SittingOnPlayerPoses)]
 			local pos = veh:GetDriver():GetPos()
@@ -379,7 +374,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		ent = EyeTrace.Entity
 		if IsValid(ent:GetVehicle()) then return end
 		if IsValid(ent.holder) and ent.GetTargetPlayer and ent:GetTargetPlayer() == ent then return end
-		if ent:GetInfoNum("sitting_disallow_on_me",0) == 1 then
+		if ent:GetInfoNum("sitting_allow_on_me",0) == 1 then
 			ply:ChatPrint(ent:Name() .. " has disabled sitting!")
 			return
 		end
@@ -421,7 +416,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 				if ent:IsPlayer() then
 					if not SittingOnPlayer2:GetBool() then return end
 
-					if ent:GetInfoNum("sitting_disallow_on_me",0) == 1 then
+					if ent:GetInfoNum("sitting_allow_on_me",0) == 1 then
 						ply:ChatPrint(ent:Name() .. " has disabled sitting!")
 						return
 					end
@@ -456,7 +451,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 					if not SittingOnPlayer2:GetBool() then return end
 					if IsValid(ent:GetVehicle()) and ent:GetVehicle():GetParent() == ply then return end
 
-					if ent:GetInfoNum("sitting_disallow_on_me", 0) == 1 then
+					if ent:GetInfoNum("sitting_allow_on_me", 0) == 1 then
 						ply:ChatPrint(ent:Name() .. " has disabled sitting!")
 						return
 					end

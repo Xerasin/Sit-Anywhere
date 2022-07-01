@@ -1,18 +1,16 @@
 local TAG = "SitAny_"
-local useAlt = CreateClientConVar("sitting_use_alt", "1.00", true, true)
-local forceBinds = CreateClientConVar("sitting_force_binds", "0", true, true)
-local SittingNoAltServer = CreateConVar("sitting_force_no_alt","0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED})
+local useAlt = CreateClientConVar("sitting_use_walk", "1.00", true, true, "Makes sitting require the use of walk, disable this to sit simply by using use", 0, 1)
+local forceBinds = CreateClientConVar("sitting_force_left_alt", "0", true, true, "Forces left alt to always act as a walk key for sitting", 0, 1)
+local SittingNoAltServer = CreateConVar("sitting_force_no_walk", "0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Disables the need for using walk to sit anywhere on the server", 0, 1)
 
-
-CreateClientConVar("sitting_ground_sit", "1.00", true, true)
-CreateClientConVar("sitting_disallow_on_me", "0.00", true, true)
+CreateClientConVar("sitting_allow_on_me", "1.00", true, true, "Allows people to sit on you", 0, 1)
 
 local function ShouldSit(ply)
 	return hook.Run("ShouldSit", ply)
 end
 
-local arrow = Material("widgets/arrow.png")
-
+local arrow, drawScale, traceDist = Material("widgets/arrow.png"), 0.1, 20
+local traceScaled = traceDist / drawScale
 
 local function StartSit(trace)
 	local wantedAng = nil
@@ -28,14 +26,13 @@ local function StartSit(trace)
 			return
 		end
 
-		local traceDist, drawScale = 20, 0.1
 		local vec = util.IntersectRayWithPlane(ply:EyePos(), ply:EyeAngles():Forward(), trace.HitPos, Vector(0, 0, 1))
 		if not vec then
 			return
 		end
 
 		local posOnPlane = WorldToLocal(vec, Angle(0, 90, 0), trace.HitPos, Angle(0, 0, 0))
-		local testVec = (posOnPlane):GetNormal() * traceDist / drawScale
+		local testVec = posOnPlane:GetNormal() * traceScaled
 		local currentAng = (trace.HitPos - vec):Angle()
 		wantedAng = currentAng
 
@@ -47,10 +44,10 @@ local function StartSit(trace)
 		if wantedAng then
 			local goodSit = SitAnywhere.CheckValidAngForSit(trace.HitPos, trace.HitNormal:Angle(), wantedAng.y)
 			if not goodSit then wantedAng = nil end
-			cam.Start3D2D(trace.HitPos + Vector(0, 0, 1), Angle(0, 0, 0), 0.1)
+			cam.Start3D2D(trace.HitPos + Vector(0, 0, 1), Angle(0, 0, 0), drawScale)
 				surface.SetDrawColor(goodSit and Color(255, 255, 255, 255) or Color(255, 0, 0, 255))
 				surface.SetMaterial(arrow)
-				surface.DrawTexturedRectRotated(testVec.x * 0.5, testVec.y * -0.5, 2 / drawScale, traceDist / drawScale, currentAng.y + 90)
+				surface.DrawTexturedRectRotated(testVec.x * 0.5, testVec.y * -0.5, 2 / drawScale, traceScaled, currentAng.y + 90)
 			cam.End3D2D()
 		end
 	end)
@@ -121,7 +118,7 @@ hook.Add("KeyPress", TAG .. "KeyPress", function(ply, key)
 	local alwaysSit = ShouldSit(ply)
 
 	if forceBinds:GetBool() then
-		if useAlt:GetBool() and (input.IsKeyDown(KEY_LALT) or input.IsKeyDown(KEY_RALT)) then
+		if useAlt:GetBool() and input.IsKeyDown(KEY_LALT) then
 			good = true
 		end
 	else
