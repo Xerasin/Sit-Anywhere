@@ -530,7 +530,7 @@ end
 
 
 
-local cache = setmetatable({}, {__mode = 'k'})
+
 
 local CheckSeat
 function CheckSeat(ply, ent, tbl)
@@ -551,6 +551,7 @@ function CheckSeat(ply, ent, tbl)
 			end
 		end
 	end
+
 	local cEnts = constraint.GetAllConstrainedEntities(ent)
 	if cEnts then
 		for _,v in next, cEnts do
@@ -564,21 +565,17 @@ function CheckSeat(ply, ent, tbl)
 	end
 end
 
+local cache = setmetatable({}, {__mode = 'k'})
 local function CheckSeat2(ply, ent)
 	if not IsValid(ply:GetVehicle()) or not ply:GetVehicle().playerdynseat then return end
 
-	local playerIndex, entIndex = ply:EntIndex(), ent:EntIndex()
-	if cache[playerIndex] and (not cache[playerIndex].steamID or cache[playerIndex].steamID ~= ply:SteamID64()) then
-		cache[playerIndex] = nil
+	if cache[ply] and cache[ply][ent] and (CurTime() - cache[ply][ent][1]) < 5 then
+		return cache[ply][ent][2]
 	end
 
-	if cache[playerIndex] and cache[playerIndex][entIndex] and (CurTime() - cache[playerIndex][entIndex][1]) < 5 then
-		return cache[playerIndex][entIndex][2]
-	end
-
-	cache[playerIndex] = cache[playerIndex] or {steamID = ply:SteamID64()}
-	cache[playerIndex][entIndex] = {CurTime(), CheckSeat(ply, ent, {})}
-	return cache[playerIndex][entIndex][2]
+	cache[ply] = cache[ply] or setmetatable({}, {__mode = 'k'})
+	cache[ply][ent] = {CurTime(), CheckSeat(ply, ent, {})}
+	return cache[ply][ent][2]
 end
 
 
