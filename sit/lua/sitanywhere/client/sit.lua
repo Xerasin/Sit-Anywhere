@@ -118,7 +118,7 @@ hook.Add("KeyPress", TAG .. "KeyPress", function(ply, key)
 	local alwaysSit = ShouldSit(ply)
 
 	if forceBinds:GetBool() then
-		if useAlt:GetBool() and (input.IsKeyDown(KEY_LALT) or input.IsKeyDown(KEY_RALT)) then
+		if useAlt:GetBool() and input.IsKeyDown(KEY_LALT) then
 			good = true
 		end
 	else
