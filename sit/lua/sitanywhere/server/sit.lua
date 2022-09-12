@@ -174,23 +174,13 @@ local SittingOnPlayerPoses =
 {
 
 	{
-		Pos = Vector(-33,13,7),
-		Ang = Angle(0,90,90),
-		Func = function(ply)
-			if not ply:LookupBone("ValveBiped.Bip01_R_Thigh") then return end
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,90,0))
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,90,0))
-		end,
-		OnExitFunc = function(ply)
-			if not ply:LookupBone("ValveBiped.Bip01_R_Thigh") then return end
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,0,0))
-			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_L_Thigh"), Angle(0,0,0))
-		end,
+		Pos = Vector(-33, 13, 7),
+		Ang = Angle(0, 90, 90),
 		FindAng = 90,
 	},
 	{
-		Pos = Vector(33,13,7),
-		Ang = Angle(0,270,90),
+		Pos = Vector(33, 13, 7),
+		Ang = Angle(0, 270, 90),
 		Func = function(ply)
 			if not ply:LookupBone("ValveBiped.Bip01_R_Thigh") then return end
 			ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_R_Thigh"), Angle(0,90,0))
