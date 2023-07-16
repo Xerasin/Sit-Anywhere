@@ -620,7 +620,6 @@ end)
 
 hook.Add("OnPlayerSit", TAG .. "HandleBadParentEntities", function(ply, pos, ang, parent, parentbone, vehicle)
 	if IsValid(parent) and parent ~= game.GetWorld() then
-		print(parent:GetModel():sub(1, 6))
 		if parent:GetModel():sub(1, 6) ~= "models" then return false end -- Parenting to brush models causes crashes
 		if parent:IsPlayer() then
 			if not SittingOnPlayer2:GetBool() then return false end
