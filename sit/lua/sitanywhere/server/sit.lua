@@ -120,7 +120,7 @@ local function Sit(ply, pos, ang, parent, parentbone, func, exit)
 	vehicle.m_tblToolsAllowed = {}
 	vehicle.customCheck = function() return false end -- DarkRP plz
 
-	if parent and parent:IsValid() then
+	if IsValid(parent) then
 		local r = math.rad(ang.yaw + 90)
 		vehicle.plyposhack = vehicle:WorldToLocal(pos + Vector(math.cos(r) * 2, math.sin(r) * 2, 2))
 
@@ -268,7 +268,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 
 	if wantedAng and math.abs(surfaceAng.pitch) <= 15 then
 		ent = EyeTrace.Entity
-		if wantedAng and (EyeTrace.HitWorld or not ent:IsPlayer()) then
+		if EyeTrace.HitWorld and not ent:IsPlayer() then
 			if SitAnywhere.CheckValidAngForSit(EyeTrace.HitPos, EyeTrace.HitNormal:Angle(), wantedAng) then
 				ang.yaw = wantedAng + 90
 			else
@@ -323,7 +323,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			if findSeat(veh) then return end
 
 			if veh:GetDriver():GetInfoNum("sitting_allow_on_me", 1) == 0 then
-				ply:ChatPrint(veh:GetDriver():Name() .. " has disabled sitting!")
+				ply:ChatPrint(("%s has disabled sitting!"):format(veh:GetDriver():Name()))
 				return false
 			end
 
@@ -363,11 +363,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 	if IsValid( EyeTrace.Entity ) and EyeTrace.Entity:IsPlayer() and SittingOnPlayer2:GetBool() and shouldSitOnPlayer then
 		ent = EyeTrace.Entity
 		if IsValid(ent:GetVehicle()) then return end
-		if IsValid(ent.holder) and ent.GetTargetPlayer and ent:GetTargetPlayer() == ent then return end
-		if ent:GetInfoNum("sitting_allow_on_me", 1) == 0 then
-			ply:ChatPrint(ent:Name() .. " has disabled sitting!")
-			return
-		end
+		--if IsValid(ent.holder) and ent.GetTargetPlayer and ent:GetTargetPlayer() == ent then return end
 
 		local min, max = ent:GetCollisionBounds()
 		local zadjust = math.abs( min.z ) + math.abs( max.z )
@@ -385,6 +381,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		return vehicle
 	end
 
+
 	if math.abs(surfaceAng.pitch) <= 15 then
 		ang = Angle()
 		local sampleResolution = 24
@@ -400,21 +397,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 		if ang_smallest_hori and distsang[infront].Hit and distsang[infront].Distance > 14 and smallest_hori <= 16 then
 			local hori = distsang[ang_smallest_hori].HorizontalTrace
 			ang.yaw = (hori.HitNormal:Angle().yaw - 90)
-
-			if not EyeTrace.HitWorld then
-				ent = EyeTrace.Entity
-				if ent:IsPlayer() then
-					if not SittingOnPlayer2:GetBool() then return end
-
-					if ent:GetInfoNum("sitting_allow_on_me", 1) == 0 then
-						ply:ChatPrint(ent:Name() .. " has disabled sitting!")
-						return
-					end
-
-					if IsValid(ent:GetVehicle()) then return end
-				end
-			end
-			return Sit(ply, EyeTrace.HitPos - Vector(0, 0, 23), ang, ent, EyeTrace.PhysicsBone or 0)
+			return Sit(ply, EyeTrace.HitPos - Vector(0, 0, 23), ang, (not EyeTrace.HitWorld) and EyeTrace.Entity, EyeTrace.PhysicsBone or 0)
 		else
 			table.sort(dists, function(a,b) return b.Distance < a.Distance end)
 			local wants = {}
@@ -433,21 +416,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 			table.sort(wants,function(a,b) return b.cost > a.cost end)
 			if #wants == 0 then return end
 			ang.yaw = (wants[1].ang - 90)
-			ent = nil
-
-			if not EyeTrace.HitWorld then
-				ent = EyeTrace.Entity
-				if ent:IsPlayer() then
-					if not SittingOnPlayer2:GetBool() then return end
-					if IsValid(ent:GetVehicle()) and ent:GetVehicle():GetParent() == ply then return end
-
-					if ent:GetInfoNum("sitting_allow_on_me", 1) == 0 then
-						ply:ChatPrint(ent:Name() .. " has disabled sitting!")
-						return
-					end
-				end
-			end
-			return Sit(ply, EyeTrace.HitPos - Vector(0, 0, 23), ang, ent, EyeTrace.PhysicsBone or 0)
+			return Sit(ply, EyeTrace.HitPos - Vector(0, 0, 23), ang, (not EyeTrace.HitWorld) and EyeTrace.Entity, EyeTrace.PhysicsBone or 0)
 		end
 
 	end
@@ -646,6 +615,22 @@ hook.Add("PlayerEnteredVehicle", TAG .. "PlayerEnteredVehicle",function(pl, veh)
 	local parent = veh:GetParent()
 	if IsValid(parent) then
 		DropEntityIfHeld(parent)
+	end
+end)
+
+hook.Add("OnPlayerSit", TAG .. "HandleBadParentEntities", function(ply, pos, ang, parent, parentbone, vehicle)
+	if IsValid(parent) and parent ~= game.GetWorld() then
+		print(parent:GetModel():sub(1, 6))
+		if parent:GetModel():sub(1, 6) ~= "models" then return false end -- Parenting to brush models causes crashes
+		if parent:IsPlayer() then
+			if not SittingOnPlayer2:GetBool() then return false end
+			if parent:GetInfoNum("sitting_allow_on_me", 1) == 0 then
+				ply:ChatPrint(("%s has disabled sitting!"):format(parent:Name()))
+				return false
+			end
+
+			if IsValid(parent:GetVehicle()) then return false end
+		end
 	end
 end)
 
