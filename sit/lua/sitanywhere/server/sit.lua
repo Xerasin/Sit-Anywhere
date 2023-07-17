@@ -268,7 +268,7 @@ function META.Sit(ply, EyeTrace, ang, parent, parentbone, func, exit, wantedAng)
 
 	if wantedAng and math.abs(surfaceAng.pitch) <= 15 then
 		ent = EyeTrace.Entity
-		if EyeTrace.HitWorld and not ent:IsPlayer() then
+		if EyeTrace.HitWorld or not ent:IsPlayer() then
 			if SitAnywhere.CheckValidAngForSit(EyeTrace.HitPos, EyeTrace.HitNormal:Angle(), wantedAng) then
 				ang.yaw = wantedAng + 90
 			else
