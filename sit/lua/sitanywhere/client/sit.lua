@@ -1,4 +1,5 @@
 local TAG = "SitAny_"
+local useHotkey = CreateClientConVar("sitting_hotkey", "1", true, true, "Enables the use of a hotkey to sit", 0, 1)
 local useAlt = CreateClientConVar("sitting_use_walk", "1.00", true, true, "Makes sitting require the use of walk, disable this to sit simply by using use", 0, 1)
 local forceBinds = CreateClientConVar("sitting_force_left_alt", "0", true, true, "Forces left alt to always act as a walk key for sitting", 0, 1)
 local SittingNoAltServer = CreateConVar("sitting_force_no_walk", "0", {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Disables the need for using walk to sit anywhere on the server", 0, 1)
@@ -9,7 +10,6 @@ local function ShouldSit(ply)
 	return hook.Run("ShouldSit", ply)
 end
 
-local traceCache = {}
 local arrow, drawScale, traceDist = Material("widgets/arrow.png"), 0.1, 20
 local traceScaled = traceDist / drawScale
 
@@ -74,10 +74,9 @@ local function StartSit(trace)
 	end
 end
 
-local function DoSit(trace)
-	if not trace.Hit then return end
-	table.CopyFromTo(trace, traceCache)
-	trace = traceCache -- awful hack!! yuck!!
+local function DoSit(traceIn)
+	if not traceIn or not traceIn.Hit then return end
+	local trace = table.Copy(traceIn)
 
 	local surfaceAng = trace.HitNormal:Angle() + Angle(-270, 0, 0)
 
@@ -111,9 +110,18 @@ concommand.Add("-sit", function(ply, cmd, args)
 	end
 end)
 
+cvars.AddChangeCallback("sitting_hotkey", function(cvar, old, new)
+	if new == "0" and currSit then
+		hook.Remove("KeyRelease", TAG .. "KeyRelease")
+		hook.Remove("PostDrawOpaqueRenderables", TAG .. "PostDrawOpaqueRenderables")
+		currSit = nil
+	end
+end)
 
 hook.Add("KeyPress", TAG .. "KeyPress", function(ply, key)
 	if not IsFirstTimePredicted() and not game.SinglePlayer() then return end
+	if not useHotkey:GetBool() then return end
+
 	if currSit then return end
 
 	if key ~= IN_USE then return end
