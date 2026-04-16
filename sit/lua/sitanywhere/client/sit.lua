@@ -9,7 +9,6 @@ local function ShouldSit(ply)
 	return hook.Run("ShouldSit", ply)
 end
 
-local traceCache = {}
 local arrow, drawScale, traceDist = Material("widgets/arrow.png"), 0.1, 20
 local traceScaled = traceDist / drawScale
 
@@ -74,10 +73,9 @@ local function StartSit(trace)
 	end
 end
 
-local function DoSit(trace)
-	if not trace.Hit then return end
-	table.CopyFromTo(trace, traceCache)
-	trace = traceCache -- awful hack!! yuck!!
+local function DoSit(traceIn)
+	if not traceIn or not traceIn.Hit then return end
+	local trace = table.Copy(traceIn)
 
 	local surfaceAng = trace.HitNormal:Angle() + Angle(-270, 0, 0)
 
