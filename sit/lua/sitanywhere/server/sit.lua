@@ -117,6 +117,7 @@ local function Sit(ply, pos, ang, parent, parentbone, func, exit)
 	vehicle.ClassOverride = "prop_vehicle_prisoner_pod"
 
 	vehicle.PhysgunDisabled = true
+	vehicle.DoNotDuplicate = true
 	vehicle.m_tblToolsAllowed = {}
 	vehicle.customCheck = function() return false end -- DarkRP plz
 
