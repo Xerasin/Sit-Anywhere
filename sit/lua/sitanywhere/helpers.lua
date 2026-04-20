@@ -200,7 +200,7 @@ local TAG = "SitAny_"
 
 timer.Create(TAG .. "SimfphysHack", 1, 0, function()
 	-- Self destruct if simfphys isn't present
-	if not simfphys or not simfphys.IsSimfphysVehicle then
+	if not simfphys or not istable(simfphys) then
 		timer.Remove(TAG .. "SimfphysHack")
 		return
 	end
