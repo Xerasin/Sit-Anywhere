@@ -194,3 +194,29 @@ function EMETA:IsSitAnywhereSeat()
 	if SERVER and self.playerdynseat then return true end
 	return self:GetNWBool("playerdynseat", false)
 end
+
+-- Compatability hacks
+local TAG = "SitAny_"
+
+timer.Create(TAG .. "SimfphysHack", 1, 0, function()
+	-- Self destruct if simfphys isn't present
+	if not simfphys or not simfphys.IsSimfphysVehicle then
+		timer.Remove(TAG .. "SimfphysHack")
+		return
+	end
+
+	for _, ent in next, ents.FindByClass("gmod_sent_vehicle_fphysics_base") do
+		if not IsValid(ent) then continue end
+		if not ent.pSeat then continue end
+		local count = #ent.pSeat
+		local cleanup = {}
+		for _, seat in ipairs(ent.pSeat) do
+			if IsValid(seat) and not seat:IsSitAnywhereSeat() then
+				table.insert(cleanup, seat)
+			end
+		end
+		if count ~= #cleanup then
+			table.CopyFromTo(cleanup, ent.pSeat)
+		end
+	end
+end)

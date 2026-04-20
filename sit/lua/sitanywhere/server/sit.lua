@@ -118,6 +118,7 @@ local function Sit(ply, pos, ang, parent, parentbone, func, exit)
 
 	vehicle.PhysgunDisabled = true
 	vehicle.DoNotDuplicate = true
+	vehicle.SPHYSchecked = false -- simfphys hack, should prevent switching to another seat using us? https://github.com/SpaxscE/simfphys_base/blob/master/lua/simfphys/base_functions.lua#L84
 	vehicle.m_tblToolsAllowed = {}
 	vehicle.customCheck = function() return false end -- DarkRP plz
 
