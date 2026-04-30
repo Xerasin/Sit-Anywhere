@@ -111,7 +111,7 @@ concommand.Add("-sit", function(ply, cmd, args)
 end)
 
 cvars.AddChangeCallback("sitting_hotkey", function(cvar, old, new)
-	if new == "0" and currSit then
+	if not tobool(new) and currSit then
 		hook.Remove("KeyRelease", TAG .. "KeyRelease")
 		hook.Remove("PostDrawOpaqueRenderables", TAG .. "PostDrawOpaqueRenderables")
 		currSit = nil
