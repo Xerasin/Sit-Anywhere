@@ -33,11 +33,12 @@ hook.Add("SetupMove", TAG .. "SetupMove", function(ply, mv)
 end)
 
 hook.Add("CalcMainActivity", TAG .. "CalcMainActivity", function(ply, vel)
-	local seq = ply:LookupSequence("pose_ducking_02")
-	if ply:GetNWBool(TAG) and seq and vel:Length2DSqr() < 1 then
-		return ACT_MP_SWIM, seq
-	else
-		return
+	if ply:GetNWBool(TAG) and vel:Length2DSqr() < 1 then
+		local seq = ply:LookupSequence("pose_ducking_02")
+
+		if seq then
+			return ACT_MP_SWIM, seq
+		end
 	end
 end)
 
