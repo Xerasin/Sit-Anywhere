@@ -3,12 +3,11 @@ SitAnywhere.GroundSit = true
 local TAG = "SitAnyG_"
 
 hook.Add("SetupMove", TAG .. "SetupMove", function(ply, mv)
-	local butts = mv:GetButtons()
-
 	if not ply:GetNWBool(TAG) then
 		return
 	end
 
+	local butts = mv:GetButtons()
 	local getUp = bit.band(butts, IN_JUMP) == IN_JUMP or ply:GetMoveType() ~= MOVETYPE_WALK or ply:InVehicle() or not ply:Alive()
 
 	if getUp then
